@@ -13,30 +13,35 @@
 #define MKXPZ_PLATFORM_WINDOWS 0
 #define MKXPZ_PLATFORM_MACOS 1
 #define MKXPZ_PLATFORM_LINUX 2
+#define MKXPZ_PLATFORM_ANDROID 3
 
 #ifdef __WIN32__
 #define MKXPZ_PLATFORM MKXPZ_PLATFORM_WINDOWS
 #elif defined __APPLE__
 #define MKXPZ_PLATFORM MKXPZ_PLATFORM_MACOS
+#elif defined __ANDROID__
+#define MKXPZ_PLATFORM MKXPZ_PLATFORM_ANDROID
 #elif defined __linux__
 #define MKXPZ_PLATFORM MKXPZ_PLATFORM_LINUX
 #else
 #error "Can't identify platform."
 #endif
 
-namespace systemImpl {
-enum WineHostType {
-    Windows,
-    Linux,
-    Mac
-};
-std::string getSystemLanguage();
-std::string getUserName();
-int getScalingFactor();
+namespace systemImpl
+{
+	enum WineHostType {
+		Windows,
+		Linux,
+		Mac
+	};
 
-bool isWine();
-bool isRosetta();
-WineHostType getRealHostType();
+	std::string getSystemLanguage();
+	std::string getUserName();
+	int getScalingFactor();
+
+	bool isWine();
+	bool isRosetta();
+	WineHostType getRealHostType();
 }
 
 #ifdef MKXPZ_BUILD_XCODE
@@ -46,4 +51,4 @@ bool isMetalSupported();
 
 namespace mkxp_sys = systemImpl;
 
-#endif /* system_h */
+#endif // system_h

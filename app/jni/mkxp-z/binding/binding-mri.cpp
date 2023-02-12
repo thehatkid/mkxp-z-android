@@ -1,23 +1,23 @@
 /*
- ** binding-mri.cpp
- **
- ** This file is part of mkxp.
- **
- ** Copyright (C) 2013 Jonas Kulla <Nyocurio@gmail.com>
- **
- ** mkxp is free software: you can redistribute it and/or modify
- ** it under the terms of the GNU General Public License as published by
- ** the Free Software Foundation, either version 2 of the License, or
- ** (at your option) any later version.
- **
- ** mkxp is distributed in the hope that it will be useful,
- ** but WITHOUT ANY WARRANTY; without even the implied warranty of
- ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- ** GNU General Public License for more details.
- **
- ** You should have received a copy of the GNU General Public License
- ** along with mkxp.  If not, see <http://www.gnu.org/licenses/>.
- */
+** binding-mri.cpp
+**
+** This file is part of mkxp.
+**
+** Copyright (C) 2013 Jonas Kulla <Nyocurio@gmail.com>
+**
+** mkxp is free software: you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation, either version 2 of the License, or
+** (at your option) any later version.
+**
+** mkxp is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with mkxp.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include "audio/audio.h"
 #include "filesystem/filesystem.h"
@@ -71,8 +71,11 @@ static void mriBindingExecute();
 static void mriBindingTerminate();
 static void mriBindingReset();
 
-ScriptBinding scriptBindingImpl = {mriBindingExecute, mriBindingTerminate,
-    mriBindingReset};
+ScriptBinding scriptBindingImpl = {
+	mriBindingExecute,
+	mriBindingTerminate,
+	mriBindingReset
+};
 
 ScriptBinding *scriptBinding = &scriptBindingImpl;
 
@@ -114,14 +117,15 @@ RB_METHOD(mkxpDesensitize);
 RB_METHOD(mkxpPuts);
 
 RB_METHOD(mkxpPlatform);
-RB_METHOD(mkxpIsMacHost);
 RB_METHOD(mkxpIsWindowsHost);
 RB_METHOD(mkxpIsLinuxHost);
-RB_METHOD(mkxpIsUsingRosetta);
+RB_METHOD(mkxpIsMacHost);
+RB_METHOD(mkxpIsAndroidHost);
 RB_METHOD(mkxpIsUsingWine);
-RB_METHOD(mkxpIsReallyMacHost);
-RB_METHOD(mkxpIsReallyLinuxHost);
+RB_METHOD(mkxpIsUsingRosetta);
 RB_METHOD(mkxpIsReallyWindowsHost);
+RB_METHOD(mkxpIsReallyLinuxHost);
+RB_METHOD(mkxpIsReallyMacHost);
 
 RB_METHOD(mkxpUserLanguage);
 RB_METHOD(mkxpUserName);
@@ -151,153 +155,154 @@ RB_METHOD(mkxpStringToUTF8Bang);
 VALUE json2rb(json5pp::value const &v);
 json5pp::value rb2json(VALUE v);
 
-static void mriBindingInit() {
-    tableBindingInit();
-    etcBindingInit();
-    fontBindingInit();
-    bitmapBindingInit();
-    spriteBindingInit();
-    viewportBindingInit();
-    planeBindingInit();
-    
-    if (rgssVer == 1) {
-        windowBindingInit();
-        tilemapBindingInit();
-    } else {
-        windowVXBindingInit();
-        tilemapVXBindingInit();
-    }
-    
-    inputBindingInit();
-    audioBindingInit();
-    graphicsBindingInit();
-    
-    fileIntBindingInit();
-    
+static void mriBindingInit()
+{
+	tableBindingInit();
+	etcBindingInit();
+	fontBindingInit();
+	bitmapBindingInit();
+	spriteBindingInit();
+	viewportBindingInit();
+	planeBindingInit();
+
+	if (rgssVer == 1) {
+		windowBindingInit();
+		tilemapBindingInit();
+	} else {
+		windowVXBindingInit();
+		tilemapVXBindingInit();
+	}
+
+	inputBindingInit();
+	audioBindingInit();
+	graphicsBindingInit();
+
+	fileIntBindingInit();
+
 #ifdef MKXPZ_MINIFFI
-    MiniFFIBindingInit();
+	MiniFFIBindingInit();
 #endif
-    
+
 #ifdef MKXPZ_STEAM
-    CUSLBindingInit();
+	CUSLBindingInit();
 #endif
-    
-    httpBindingInit();
-    
-    if (rgssVer >= 3) {
-        _rb_define_module_function(rb_mKernel, "rgss_main", mriRgssMain);
-        _rb_define_module_function(rb_mKernel, "rgss_stop", mriRgssStop);
-        
-        _rb_define_module_function(rb_mKernel, "msgbox", mriPrint);
-        _rb_define_module_function(rb_mKernel, "msgbox_p", mriP);
-        
-        rb_define_global_const("RGSS_VERSION", rb_utf8_str_new_cstr("3.0.1"));
-    } else {
-        _rb_define_module_function(rb_mKernel, "print", mriPrint);
-        _rb_define_module_function(rb_mKernel, "p", mriP);
-        
-        rb_define_alias(rb_singleton_class(rb_mKernel), "_mkxp_kernel_caller_alias",
-                        "caller");
-        _rb_define_module_function(rb_mKernel, "caller", _kernelCaller);
-    }
-    
-    if (rgssVer == 1)
-        rb_eval_string(module_rpg1);
-    else if (rgssVer == 2)
-        rb_eval_string(module_rpg2);
-    else if (rgssVer == 3)
-        rb_eval_string(module_rpg3);
-    else
-        assert(!"unreachable");
-    
-    VALUE mod = rb_define_module("System");
-    _rb_define_module_function(mod, "delta", mkxpDelta);
-    _rb_define_module_function(mod, "uptime", mkxpDelta);
-    _rb_define_module_function(mod, "data_directory", mkxpDataDirectory);
-    _rb_define_module_function(mod, "set_window_title", mkxpSetTitle);
-    _rb_define_module_function(mod, "window_title", mkxpGetTitle);
-    _rb_define_module_function(mod, "window_title=", mkxpSetTitle);
-    _rb_define_module_function(mod, "show_settings", mkxpSettingsMenu);
-    _rb_define_module_function(mod, "puts", mkxpPuts);
-    _rb_define_module_function(mod, "desensitize", mkxpDesensitize);
-    _rb_define_module_function(mod, "platform", mkxpPlatform);
-    
-    _rb_define_module_function(mod, "is_mac?", mkxpIsMacHost);
-    _rb_define_module_function(mod, "is_rosetta?", mkxpIsUsingRosetta);
-    
-    _rb_define_module_function(mod, "is_linux?", mkxpIsLinuxHost);
-    
-    _rb_define_module_function(mod, "is_windows?", mkxpIsWindowsHost);
-    _rb_define_module_function(mod, "is_wine?", mkxpIsUsingWine);
-    _rb_define_module_function(mod, "is_really_mac?", mkxpIsReallyMacHost);
-    _rb_define_module_function(mod, "is_really_linux?", mkxpIsReallyLinuxHost);
-    _rb_define_module_function(mod, "is_really_windows?", mkxpIsReallyWindowsHost);
-    
-    
-    _rb_define_module_function(mod, "user_language", mkxpUserLanguage);
-    _rb_define_module_function(mod, "user_name", mkxpUserName);
-    _rb_define_module_function(mod, "game_title", mkxpGameTitle);
-    _rb_define_module_function(mod, "power_state", mkxpPowerState);
-    _rb_define_module_function(mod, "nproc", mkxpCpuCount);
-    _rb_define_module_function(mod, "memory", mkxpSystemMemory);
-    _rb_define_module_function(mod, "reload_cache", mkxpReloadPathCache);
-    _rb_define_module_function(mod, "mount", mkxpAddPath);
-    _rb_define_module_function(mod, "unmount", mkxpRemovePath);
-    _rb_define_module_function(mod, "launch", mkxpLaunch);
-    
-    _rb_define_module_function(mod, "default_font_family=", mkxpSetDefaultFontFamily);
-    
-    _rb_define_method(rb_cString, "to_utf8", mkxpStringToUTF8);
-    _rb_define_method(rb_cString, "to_utf8!", mkxpStringToUTF8Bang);
-    
-    VALUE cmod = rb_define_module("CFG");
-    _rb_define_module_function(cmod, "[]", mkxpGetJSONSetting);
-    _rb_define_module_function(cmod, "[]=", mkxpSetJSONSetting);
-    _rb_define_module_function(cmod, "to_hash", mkxpGetAllJSONSettings);
-    
-    /* Load global constants */
-    rb_gv_set("MKXP", Qtrue);
-    
-    VALUE debug = rb_bool_new(shState->config().editor.debug);
-    if (rgssVer == 1)
-        rb_gv_set("DEBUG", debug);
-    else if (rgssVer >= 2)
-        rb_gv_set("TEST", debug);
-    
-    rb_gv_set("BTEST", rb_bool_new(shState->config().editor.battleTest));
-    
-    VALUE vers = rb_utf8_str_new_cstr(MKXPZ_VERSION);
-    rb_str_freeze(vers);
-    rb_define_const(mod, "VERSION", vers);
-    
-    // Set $stdout and its ilk accordingly on Windows
-    // I regret teaching you that word
+
+	httpBindingInit();
+
+	if (rgssVer >= 3) {
+		_rb_define_module_function(rb_mKernel, "rgss_main", mriRgssMain);
+		_rb_define_module_function(rb_mKernel, "rgss_stop", mriRgssStop);
+
+		_rb_define_module_function(rb_mKernel, "msgbox", mriPrint);
+		_rb_define_module_function(rb_mKernel, "msgbox_p", mriP);
+
+		rb_define_global_const("RGSS_VERSION", rb_utf8_str_new_cstr("3.0.1"));
+	} else {
+		_rb_define_module_function(rb_mKernel, "print", mriPrint);
+		_rb_define_module_function(rb_mKernel, "p", mriP);
+
+		rb_define_alias(rb_singleton_class(rb_mKernel), "_mkxp_kernel_caller_alias", "caller");
+		_rb_define_module_function(rb_mKernel, "caller", _kernelCaller);
+	}
+
+	if (rgssVer == 1)
+		rb_eval_string(module_rpg1);
+	else if (rgssVer == 2)
+		rb_eval_string(module_rpg2);
+	else if (rgssVer == 3)
+		rb_eval_string(module_rpg3);
+	else
+		assert(!"unreachable");
+
+	VALUE mod = rb_define_module("System");
+
+	_rb_define_module_function(mod, "delta", mkxpDelta);
+	_rb_define_module_function(mod, "uptime", mkxpDelta);
+	_rb_define_module_function(mod, "data_directory", mkxpDataDirectory);
+	_rb_define_module_function(mod, "set_window_title", mkxpSetTitle);
+	_rb_define_module_function(mod, "window_title", mkxpGetTitle);
+	_rb_define_module_function(mod, "window_title=", mkxpSetTitle);
+	_rb_define_module_function(mod, "show_settings", mkxpSettingsMenu);
+	_rb_define_module_function(mod, "puts", mkxpPuts);
+	_rb_define_module_function(mod, "desensitize", mkxpDesensitize);
+
+	_rb_define_module_function(mod, "platform", mkxpPlatform);
+	_rb_define_module_function(mod, "is_windows?", mkxpIsWindowsHost);
+	_rb_define_module_function(mod, "is_linux?", mkxpIsLinuxHost);
+	_rb_define_module_function(mod, "is_mac?", mkxpIsMacHost);
+	_rb_define_module_function(mod, "is_android?", mkxpIsAndroidHost);
+	_rb_define_module_function(mod, "is_wine?", mkxpIsUsingWine);
+	_rb_define_module_function(mod, "is_rosetta?", mkxpIsUsingRosetta);
+	_rb_define_module_function(mod, "is_really_windows?", mkxpIsReallyWindowsHost);
+	_rb_define_module_function(mod, "is_really_linux?", mkxpIsReallyLinuxHost);
+	_rb_define_module_function(mod, "is_really_mac?", mkxpIsReallyMacHost);
+
+	_rb_define_module_function(mod, "user_language", mkxpUserLanguage);
+	_rb_define_module_function(mod, "user_name", mkxpUserName);
+	_rb_define_module_function(mod, "game_title", mkxpGameTitle);
+	_rb_define_module_function(mod, "power_state", mkxpPowerState);
+	_rb_define_module_function(mod, "nproc", mkxpCpuCount);
+	_rb_define_module_function(mod, "memory", mkxpSystemMemory);
+
+	_rb_define_module_function(mod, "reload_cache", mkxpReloadPathCache);
+	_rb_define_module_function(mod, "mount", mkxpAddPath);
+	_rb_define_module_function(mod, "unmount", mkxpRemovePath);
+
+	_rb_define_module_function(mod, "launch", mkxpLaunch);
+
+	_rb_define_module_function(mod, "default_font_family=", mkxpSetDefaultFontFamily);
+
+	_rb_define_method(rb_cString, "to_utf8", mkxpStringToUTF8);
+	_rb_define_method(rb_cString, "to_utf8!", mkxpStringToUTF8Bang);
+
+	VALUE cmod = rb_define_module("CFG");
+	_rb_define_module_function(cmod, "[]", mkxpGetJSONSetting);
+	_rb_define_module_function(cmod, "[]=", mkxpSetJSONSetting);
+	_rb_define_module_function(cmod, "to_hash", mkxpGetAllJSONSettings);
+
+	// Load global constants
+	rb_gv_set("MKXP", Qtrue);
+
+	VALUE debug = rb_bool_new(shState->config().editor.debug);
+	if (rgssVer == 1)
+		rb_gv_set("DEBUG", debug);
+	else if (rgssVer >= 2)
+		rb_gv_set("TEST", debug);
+
+	rb_gv_set("BTEST", rb_bool_new(shState->config().editor.battleTest));
+
+	VALUE vers = rb_utf8_str_new_cstr(MKXPZ_VERSION);
+	rb_str_freeze(vers);
+	rb_define_const(mod, "VERSION", vers);
+
+	// Set $stdout and its ilk accordingly on Windows
+	// I regret teaching you that word
 #ifdef __WIN32__
-    if (shState->config().winConsole)
-        configureWindowsStreams();
+	if (shState->config().winConsole)
+		configureWindowsStreams();
 #endif
 }
 
-static void showMsg(const std::string &msg) {
-    shState->eThread().showMessageBox(msg.c_str());
+static void showMsg(const std::string &msg)
+{
+	shState->eThread().showMessageBox(msg.c_str());
 }
 
-static void printP(int argc, VALUE *argv, const char *convMethod,
-                   const char *sep) {
-    VALUE dispString = rb_str_buf_new(128);
-    ID conv = rb_intern(convMethod);
-    
-    for (int i = 0; i < argc; ++i) {
-        VALUE str = rb_funcall2(argv[i], conv, 0, NULL);
-        rb_str_buf_append(dispString, str);
-        
-        if (i < argc)
-            rb_str_buf_cat2(dispString, sep);
-    }
-    
-    showMsg(RSTRING_PTR(dispString));
-}
+static void printP(int argc, VALUE *argv, const char *convMethod, const char *sep)
+{
+	VALUE dispString = rb_str_buf_new(128);
+	ID conv = rb_intern(convMethod);
 
+	for (int i = 0; i < argc; ++i) {
+		VALUE str = rb_funcall2(argv[i], conv, 0, NULL);
+		rb_str_buf_append(dispString, str);
+
+		if (i < argc)
+			rb_str_buf_cat2(dispString, sep);
+	}
+
+	showMsg(RSTRING_PTR(dispString));
+}
 
 RB_METHOD(mriPrint) {
     RB_UNUSED_PARAM;
@@ -374,78 +379,91 @@ RB_METHOD(mkxpPuts) {
     return Qnil;
 }
 
-RB_METHOD(mkxpPlatform) {
-    RB_UNUSED_PARAM;
-    
+RB_METHOD(mkxpPlatform)
+{
+	RB_UNUSED_PARAM;
+
 #if MKXPZ_PLATFORM == MKXPZ_PLATFORM_MACOS
-    std::string platform("macOS");
-    
-    if (mkxp_sys::isRosetta())
-        platform += " (Rosetta)";
-    
+	std::string platform("macOS");
+
+	if (mkxp_sys::isRosetta())
+		platform += " (Rosetta)";
 #elif MKXPZ_PLATFORM == MKXPZ_PLATFORM_WINDOWS
-    std::string platform("Windows");
-    
-    if (mkxp_sys::isWine()) {
-        platform += " (Wine - ";
-        switch (mkxp_sys::getRealHostType()) {
-            case mkxp_sys::WineHostType::Mac:
-                platform += "macOS)";
-                break;
-            default:
-                platform += "Linux)";
-                break;
-        }
-    }
+	std::string platform("Windows");
+
+	if (mkxp_sys::isWine()) {
+		platform += " (Wine - ";
+		switch (mkxp_sys::getRealHostType())
+		{
+			case mkxp_sys::WineHostType::Mac:
+				platform += "macOS)";
+				break;
+			default:
+				platform += "Linux)";
+				break;
+		}
+	}
+#elif MKXPZ_PLATFORM == MKXPZ_PLATFORM_ANDROID
+	std::string platform("Android");
 #else
-    std::string platform("Linux");
+	std::string platform("Linux");
 #endif
-    
-    return rb_utf8_str_new_cstr(platform.c_str());
+
+	return rb_utf8_str_new_cstr(platform.c_str());
 }
 
-RB_METHOD(mkxpIsMacHost) {
-    RB_UNUSED_PARAM;
-    
-    return rb_bool_new(MKXPZ_PLATFORM == MKXPZ_PLATFORM_MACOS);
+RB_METHOD(mkxpIsWindowsHost)
+{
+	RB_UNUSED_PARAM;
+	return rb_bool_new(MKXPZ_PLATFORM == MKXPZ_PLATFORM_WINDOWS);
 }
 
-RB_METHOD(mkxpIsUsingRosetta) {
-    RB_UNUSED_PARAM;
-    
-    return rb_bool_new(mkxp_sys::isRosetta());
+RB_METHOD(mkxpIsLinuxHost)
+{
+	RB_UNUSED_PARAM;
+	return rb_bool_new(MKXPZ_PLATFORM == MKXPZ_PLATFORM_LINUX || MKXPZ_PLATFORM == MKXPZ_PLATFORM_ANDROID);
 }
 
-RB_METHOD(mkxpIsLinuxHost) {
-    RB_UNUSED_PARAM;
-    
-    return rb_bool_new(MKXPZ_PLATFORM == MKXPZ_PLATFORM_LINUX);
+RB_METHOD(mkxpIsMacHost)
+{
+	RB_UNUSED_PARAM;
+	return rb_bool_new(MKXPZ_PLATFORM == MKXPZ_PLATFORM_MACOS);
 }
 
-RB_METHOD(mkxpIsWindowsHost) {
-    RB_UNUSED_PARAM;
-    
-    return rb_bool_new(MKXPZ_PLATFORM == MKXPZ_PLATFORM_WINDOWS);
+RB_METHOD(mkxpIsAndroidHost)
+{
+	RB_UNUSED_PARAM;
+	return rb_bool_new(MKXPZ_PLATFORM == MKXPZ_PLATFORM_ANDROID);
 }
 
-RB_METHOD(mkxpIsUsingWine) {
-    RB_UNUSED_PARAM;
-    return rb_bool_new(mkxp_sys::isWine());
+RB_METHOD(mkxpIsUsingWine)
+{
+	RB_UNUSED_PARAM;
+	return rb_bool_new(mkxp_sys::isWine());
 }
 
-RB_METHOD(mkxpIsReallyMacHost) {
-    RB_UNUSED_PARAM;
-    return rb_bool_new(mkxp_sys::getRealHostType() == mkxp_sys::WineHostType::Mac);
+RB_METHOD(mkxpIsUsingRosetta)
+{
+	RB_UNUSED_PARAM;
+	return rb_bool_new(mkxp_sys::isRosetta());
 }
 
-RB_METHOD(mkxpIsReallyLinuxHost) {
-    RB_UNUSED_PARAM;
-    return rb_bool_new(mkxp_sys::getRealHostType() == mkxp_sys::WineHostType::Linux);
+RB_METHOD(mkxpIsReallyWindowsHost)
+{
+	RB_UNUSED_PARAM;
+	return rb_bool_new(mkxp_sys::getRealHostType() == mkxp_sys::WineHostType::Windows);
 }
 
-RB_METHOD(mkxpIsReallyWindowsHost) {
-    RB_UNUSED_PARAM;
-    return rb_bool_new(mkxp_sys::getRealHostType() == mkxp_sys::WineHostType::Windows);
+RB_METHOD(mkxpIsReallyLinuxHost)
+{
+	RB_UNUSED_PARAM;
+	return rb_bool_new(mkxp_sys::getRealHostType() == mkxp_sys::WineHostType::Linux);
+}
+
+RB_METHOD(mkxpIsReallyMacHost)
+{
+	RB_UNUSED_PARAM;
+	return rb_bool_new(mkxp_sys::getRealHostType() == mkxp_sys::WineHostType::Mac);
 }
 
 RB_METHOD(mkxpUserLanguage) {
