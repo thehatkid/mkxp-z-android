@@ -1,0 +1,21 @@
+# Build folders/files
+build/
+libs/
+obj/
+jni/build*
+
+# Native dependecies
+jni/libiconv/
+jni/libogg/
+jni/libtheora/
+jni/libvorbis/
+jni/openal/
+jni/openssl/
+jni/physfs/
+jni/pixman/
+jni/ruby/
+jni/SDL2/
+jni/SDL2_image/
+jni/SDL2_sound/
+jni/SDL2_ttf/
+jni/uchardet/

@@ -1,0 +1,19 @@
+# Android Studio and Gradle stuff
+.idea
+.gradle
+local.properties
+*.iml
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Eclipse project files
+.classpath
+.project
+
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db

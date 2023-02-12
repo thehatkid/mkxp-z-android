@@ -1,0 +1,45 @@
+*.o
+*.pro.*
+*.bak
+*.old
+
+/xxd
+
+# Visual Studio Code
+/.vscode
+*.code-workspace
+
+# Codeblocks
+mkxp.layout
+mkxp.cbp
+
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon must end with two \r
+Icon
+
+# Thumbnails
+._*
+Thumbs.db
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# GCC patch
+/*.gcno

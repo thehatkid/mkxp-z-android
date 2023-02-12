@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- You can make custom themes with custom style items for activities here. -->
+
+    <style name="AppTheme" parent="android:Theme.Material.NoActionBar">
+        <!-- Custom style items for main theme goes here. -->
+    </style>
+</resources>
