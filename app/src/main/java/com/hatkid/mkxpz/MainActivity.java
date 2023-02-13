@@ -3,6 +3,7 @@ package com.hatkid.mkxpz;
 import android.util.Log;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import java.util.Locale;
 
 import org.libsdl.app.SDLActivity;
 
@@ -41,7 +42,7 @@ public class MainActivity extends SDLActivity
 
     /**
      * This method is for arguments for launching native mkxp-z.
-     * @return arguments for the mkxp-z.
+     * @return arguments for the mkxp-z
      */
     @Override
     protected String[] getArguments()
@@ -57,5 +58,17 @@ public class MainActivity extends SDLActivity
         }
 
         return args;
+    }
+
+    /**
+     * This method is used in native mkxp-z. (see systemImpl.cpp)
+     * This method returns current device locale tag. (e.g. "en_US")
+     * @return string of locale tag
+     */
+    private static String getSystemLanguage()
+    {
+        Locale locale = Locale.getDefault();
+
+        return locale.toString();
     }
 }

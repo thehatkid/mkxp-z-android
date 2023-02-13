@@ -10,6 +10,9 @@
 #if defined(__WIN32__)
 #include <stdlib.h>
 #include <windows.h>
+#elif defined(__ANDROID__)
+#include <SDL.h>
+#include <jni.h>
 #else
 #include <locale>
 #endif
@@ -18,45 +21,69 @@
 #include <cstring>
 #include <string>
 
-std::string systemImpl::getSystemLanguage() {
-    static char buf[50] = {0};
+std::string systemImpl::getSystemLanguage()
+{
+	static char buf[50] = {0};
+
 #if defined(__WIN32__)
-    wchar_t wbuf[50] = {0};
-    LANGID lid = GetUserDefaultLangID();
-    LCIDToLocaleName(lid, wbuf, sizeof(wbuf), 0);
-    wcstombs(buf, wbuf, sizeof(buf));
+	wchar_t wbuf[50] = {0};
+	LANGID lid = GetUserDefaultLangID();
+	LCIDToLocaleName(lid, wbuf, sizeof(wbuf), 0);
+	wcstombs(buf, wbuf, sizeof(buf));
+#elif defined(__ANDROID__)
+	JNIEnv *jenv = (JNIEnv *)SDL_AndroidGetJNIEnv();
+	jobject activity = (jobject)SDL_AndroidGetActivity();
+	jclass cls = jenv->GetObjectClass(activity);
+
+	// Get and call method
+	jmethodID mIDgetLocale = jenv->GetStaticMethodID(cls, "getSystemLanguage", "()Ljava/lang/String;");
+	jstring jstrLocale = (jstring)jenv->CallStaticObjectMethod(cls, mIDgetLocale);
+
+	const char *locale = jenv->GetStringUTFChars(jstrLocale, 0);
+	strncpy(buf, locale, sizeof(buf));
+
+	// Cleanup JNI stuff
+	jenv->ReleaseStringUTFChars(jstrLocale, locale);
+	jenv->DeleteLocalRef(cls);
+	jenv->DeleteLocalRef(activity);
 #else
-    strncpy(buf, std::locale("").name().c_str(), sizeof(buf));
+	strncpy(buf, std::locale("").name().c_str(), sizeof(buf));
 #endif
-    
-    for (int i = 0; (size_t)i < strlen(buf); i++) {
+
+	for (int i = 0; (size_t)i < strlen(buf); i++) {
 #ifdef __WIN32__
-        if (buf[i] == '-') {
-            buf[i] = '_';
+		if (buf[i] == '-') {
+			buf[i] = '_';
 #else
-        if (buf[i] == '.') {
-            buf[i] = 0;
+		if (buf[i] == '.') {
+			buf[i] = 0;
 #endif
-            break;
-        }
-    }
-    return std::string(buf);
+			break;
+		}
+	}
+
+	return std::string(buf);
 }
 
-std::string systemImpl::getUserName() {
-    
+std::string systemImpl::getUserName()
+{
 #ifdef __WIN32__
-    // The Ruby binding gets the username from the environment loaded
-    // with Ruby instead, should fix getting it from WinAPI at some point
-    return std::string("unused");
+	// The Ruby binding gets the username from the environment loaded
+	// with Ruby instead, should fix getting it from WinAPI at some point.
+	return std::string("unused");
+#elif defined __ANDROID__
+	// There's no way to get actual user's name in Android,
+	// so return placeholder.
+	return std::string("Android");
 #else
-    char ret[30];
-    char *username = getenv("USER");
-    if (username)
-        strncpy(ret, username, sizeof(ret));
-    return std::string(ret);
+	char ret[30];
+	char *username = getenv("USER");
+
+	if (username)
+		strncpy(ret, username, sizeof(ret));
+
+	return std::string(ret);
 #endif
-    
 }
     
 bool systemImpl::isWine() {

@@ -466,22 +466,23 @@ RB_METHOD(mkxpIsReallyMacHost)
 	return rb_bool_new(mkxp_sys::getRealHostType() == mkxp_sys::WineHostType::Mac);
 }
 
-RB_METHOD(mkxpUserLanguage) {
-    RB_UNUSED_PARAM;
-    
-    return rb_utf8_str_new_cstr(mkxp_sys::getSystemLanguage().c_str());
+RB_METHOD(mkxpUserLanguage)
+{
+	RB_UNUSED_PARAM;
+	return rb_utf8_str_new_cstr(mkxp_sys::getSystemLanguage().c_str());
 }
 
-RB_METHOD(mkxpUserName) {
-    RB_UNUSED_PARAM;
-    
-    // Using the Windows API isn't working with usernames that involve Unicode
-    // characters for some dumb reason
+RB_METHOD(mkxpUserName)
+{
+	RB_UNUSED_PARAM;
+
 #ifdef __WIN32__
-    VALUE env = rb_const_get(rb_mKernel, rb_intern("ENV"));
-    return rb_funcall(env, rb_intern("[]"), 1, rb_str_new_cstr("USERNAME"));
+	// Using the Windows API isn't working with usernames that involve Unicode
+	// characters for some dumb reason.
+	VALUE env = rb_const_get(rb_mKernel, rb_intern("ENV"));
+	return rb_funcall(env, rb_intern("[]"), 1, rb_str_new_cstr("USERNAME"));
 #else
-    return rb_utf8_str_new_cstr(mkxp_sys::getUserName().c_str());
+	return rb_utf8_str_new_cstr(mkxp_sys::getUserName().c_str());
 #endif
 }
 
