@@ -56,7 +56,13 @@ int __sdlThreadFun(void *obj)
 template<class C, void (C::*func)()>
 SDL_Thread *createSDLThread(C *obj, const std::string &name = std::string())
 {
+#ifndef __ANDROID__
 	return SDL_CreateThread((__sdlThreadFun<C, func>), name.c_str(), obj);
+#else
+	// SDL_CreateThread seems allocates stack size too low on Android,
+	// so using SDL_CreateThreadWithStackSize instead.
+	return SDL_CreateThreadWithStackSize((__sdlThreadFun<C, func>), name.c_str(), 0, obj);
+#endif
 }
 
 /* On Android, SDL_RWFromFile always opens files from inside
