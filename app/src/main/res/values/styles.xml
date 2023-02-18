@@ -5,4 +5,6 @@
     <style name="AppTheme" parent="android:Theme.Material.NoActionBar">
         <!-- Custom style items for main theme goes here. -->
     </style>
+
+    <style name="GamepadButton" />
 </resources>

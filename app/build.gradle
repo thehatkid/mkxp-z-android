@@ -32,7 +32,7 @@ android {
         abi {
             enable true
             reset()
-            // You can build also 'x86' and 'x86_64' if you want (quite useful for AVD debugging)
+            // You can build also 'x86' and 'x86_64' if you want (useful for AVD debugging)
             include 'armeabi-v7a', 'arm64-v8a'
             universalApk false
         }
@@ -48,4 +48,8 @@ android {
             path "jni/Android.mk"
         }
     }
+}
+
+dependencies {
+    implementation 'com.intuit.sdp:sdp-android:1.1.0'
 }
