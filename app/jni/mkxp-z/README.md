@@ -22,4 +22,4 @@ Readme header fragment from mkxp-z:
 ## License
 
 mkxp-z (mkxp) is licensed under GNU General Public License version 2 (GPLv2),
-see [COPYING](app/jni/mkxp-z/COPYING).
+see [COPYING](COPYING).
