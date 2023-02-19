@@ -18,7 +18,7 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
 
@@ -34,7 +34,7 @@ android {
             reset()
             // You can build also 'x86' and 'x86_64' if you want (useful for AVD debugging)
             include 'armeabi-v7a', 'arm64-v8a'
-            universalApk false
+            universalApk true
         }
     }
 
