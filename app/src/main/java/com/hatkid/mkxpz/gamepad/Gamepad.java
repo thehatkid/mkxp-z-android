@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+import android.view.animation.AlphaAnimation;
 import android.widget.RelativeLayout;
 
 import com.hatkid.mkxpz.R;
@@ -39,6 +40,8 @@ public class Gamepad
         mOnKeyUpListener = onKeyUpListener;
     }
 
+    private RelativeLayout mGamepadLayout;
+
     // Gamepad buttons
     private GamepadButton gpadBtnA;
     private GamepadButton gpadBtnB;
@@ -63,7 +66,7 @@ public class Gamepad
         // Setup layout of in-screen gamepad
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         ViewGroup layout = (ViewGroup) inflater.inflate(R.layout.gamepad_layout, viewGroup);
-        RelativeLayout gamepadLayout = layout.findViewById(R.id.gamepad_layout);
+        mGamepadLayout = layout.findViewById(R.id.gamepad_layout);
 
         // Setup D-Pad and buttons
         GamepadDPad gpadDPad = layout.findViewById(R.id.dpad);
@@ -80,7 +83,7 @@ public class Gamepad
         gpadBtnSHIFT = layout.findViewById(R.id.button_SHIFT);
 
         // Setup in-screen gamepad listeners
-        gamepadLayout.setOnTouchListener((view, motionEvent) -> false);
+        mGamepadLayout.setOnTouchListener((view, motionEvent) -> false);
         gpadDPad.setOnKeyDownListener(key -> mOnKeyDownListener.onKeyDown(key));
         gpadDPad.setOnKeyUpListener(key -> mOnKeyUpListener.onKeyUp(key));
 
@@ -91,8 +94,8 @@ public class Gamepad
         initGamepadButtons();
 
         // Apply scale and opacity from gamepad config
-        ViewUtils.resize(gamepadLayout, mGamepadConfig.scale);
-        ViewUtils.changeOpacity(gamepadLayout, mGamepadConfig.opacity);
+        ViewUtils.resize(mGamepadLayout, mGamepadConfig.scale);
+        ViewUtils.changeOpacity(mGamepadLayout, mGamepadConfig.opacity);
     }
 
     private void setGamepadButtonKey(GamepadButton gpadBtn, Integer keycode)
@@ -108,6 +111,26 @@ public class Gamepad
         gpadBtn.setKey(keycode);
         gpadBtn.setOnKeyDownListener(key -> mOnKeyDownListener.onKeyDown(key));
         gpadBtn.setOnKeyUpListener(key -> mOnKeyUpListener.onKeyUp(key));
+    }
+
+    public void showView()
+    {
+        if (mGamepadLayout != null) {
+            AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
+            anim.setDuration(250);
+            anim.setFillAfter(true);
+            mGamepadLayout.startAnimation(anim);
+        }
+    }
+
+    public void hideView()
+    {
+        if (mGamepadLayout != null) {
+            AlphaAnimation anim = new AlphaAnimation(1.0f, 0.0f);
+            anim.setDuration(500);
+            anim.setFillAfter(true);
+            mGamepadLayout.startAnimation(anim);
+        }
     }
 
     private void initGamepadButtons()

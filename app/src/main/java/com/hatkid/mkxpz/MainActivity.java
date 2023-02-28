@@ -4,6 +4,7 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+import android.view.InputDevice;
 import android.os.Bundle;
 import android.util.Log;
 import java.util.Locale;
@@ -22,6 +23,7 @@ public class MainActivity extends SDLActivity
 
     // In-screen gamepad
     public Gamepad gpad = new Gamepad();
+    private boolean mGamepadInvisible = false;
 
     @Override
     protected void onStart()
@@ -66,11 +68,43 @@ public class MainActivity extends SDLActivity
     @Override
     public boolean dispatchKeyEvent(KeyEvent evt)
     {
+        if (
+            (
+                evt.getKeyCode() != KeyEvent.KEYCODE_BACK &&
+                evt.getKeyCode() != KeyEvent.KEYCODE_VOLUME_UP &&
+                evt.getKeyCode() != KeyEvent.KEYCODE_VOLUME_DOWN &&
+                evt.getKeyCode() != KeyEvent.KEYCODE_VOLUME_MUTE
+            ) && (
+                evt.getSource() == InputDevice.SOURCE_DPAD ||
+                evt.getSource() == InputDevice.SOURCE_GAMEPAD ||
+                evt.getSource() == InputDevice.SOURCE_JOYSTICK ||
+                evt.getSource() == InputDevice.SOURCE_KEYBOARD
+            )
+        ) {
+            // Hide gamepad view on key events when visible
+            if (gpad != null && !mGamepadInvisible) {
+                gpad.hideView();
+                mGamepadInvisible = true;
+            }
+        }
+
         if (gpad != null)
             if (gpad.processGamepadEvent(evt))
                 return true;
 
         return super.dispatchKeyEvent(evt);
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent evt)
+    {
+        // Show gamepad view on touch when hidden
+        if (gpad != null && mGamepadInvisible) {
+            gpad.showView();
+            mGamepadInvisible = false;
+        }
+
+        return super.dispatchTouchEvent(evt);
     }
 
     @Override
