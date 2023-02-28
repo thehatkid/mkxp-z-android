@@ -150,7 +150,12 @@ public class Gamepad
 
     public boolean processGamepadEvent(KeyEvent evt)
     {
-        int sources = evt.getDevice().getSources();
+        InputDevice device = evt.getDevice();
+
+        if (device == null)
+            return false;
+
+        int sources = device.getSources();
 
         if (
             ((sources & InputDevice.SOURCE_GAMEPAD) != InputDevice.SOURCE_GAMEPAD) &&
@@ -177,7 +182,12 @@ public class Gamepad
 
     public boolean processDPadEvent(MotionEvent evt)
     {
-        int sources = evt.getDevice().getSources();
+        InputDevice device = evt.getDevice();
+
+        if (device == null)
+            return false;
+
+        int sources = device.getSources();
 
         if (((sources & InputDevice.SOURCE_DPAD) != InputDevice.SOURCE_DPAD))
             return false;
