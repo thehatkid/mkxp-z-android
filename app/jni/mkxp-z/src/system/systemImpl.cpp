@@ -31,25 +31,25 @@ std::string systemImpl::getSystemLanguage()
 	LCIDToLocaleName(lid, wbuf, sizeof(wbuf), 0);
 	wcstombs(buf, wbuf, sizeof(buf));
 #elif defined(__ANDROID__)
-	JNIEnv *jenv = (JNIEnv *)SDL_AndroidGetJNIEnv();
+	JNIEnv *env = (JNIEnv *)SDL_AndroidGetJNIEnv();
 	jobject activity = (jobject)SDL_AndroidGetActivity();
-	jclass cls = jenv->GetObjectClass(activity);
+	jclass cls = env->GetObjectClass(activity);
 
-	// Get and call method
-	jmethodID mIDgetLocale = jenv->GetStaticMethodID(cls, "getSystemLanguage", "()Ljava/lang/String;");
-	jstring jstrLocale = (jstring)jenv->CallStaticObjectMethod(cls, mIDgetLocale);
+	jmethodID mIDgetLocale = env->GetStaticMethodID(cls, "getSystemLanguage", "()Ljava/lang/String;");
+	jstring strJLocale = (jstring)env->CallStaticObjectMethod(cls, mIDgetLocale);
 
-	const char *locale = jenv->GetStringUTFChars(jstrLocale, 0);
-	strncpy(buf, locale, sizeof(buf));
+	const char *strCLocale = env->GetStringUTFChars(strJLocale, 0);
+	strncpy(buf, strCLocale, sizeof(buf));
 
-	// Cleanup JNI stuff
-	jenv->ReleaseStringUTFChars(jstrLocale, locale);
-	jenv->DeleteLocalRef(cls);
-	jenv->DeleteLocalRef(activity);
+	env->ReleaseStringUTFChars(strJLocale, strCLocale);
+	env->DeleteLocalRef(strJLocale);
+	env->DeleteLocalRef(cls);
+	env->DeleteLocalRef(activity);
 #else
 	strncpy(buf, std::locale("").name().c_str(), sizeof(buf));
 #endif
 
+#ifndef __ANDROID__
 	for (int i = 0; (size_t)i < strlen(buf); i++) {
 #ifdef __WIN32__
 		if (buf[i] == '-') {
@@ -61,6 +61,7 @@ std::string systemImpl::getSystemLanguage()
 			break;
 		}
 	}
+#endif
 
 	return std::string(buf);
 }

@@ -102,6 +102,7 @@ LOCAL_SRC_FILES := \
 	$(LOCAL_PATH)/binding/viewport-binding.cpp \
 	$(LOCAL_PATH)/binding/window-binding.cpp \
 	$(LOCAL_PATH)/binding/windowvx-binding.cpp \
+	$(LOCAL_PATH)/binding/android-binding.cpp \
 	$(LOCAL_PATH)/binding/cusl-binding.cpp \
 	$(LOCAL_PATH)/binding/http-binding.cpp \
 	$(LOCAL_PATH)/binding/miniffi.cpp \

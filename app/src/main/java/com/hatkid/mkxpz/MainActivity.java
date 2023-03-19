@@ -1,11 +1,16 @@
 package com.hatkid.mkxpz;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.InputDevice;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Vibrator;
+import android.os.VibrationEffect;
 import android.util.Log;
 import java.util.Locale;
 
@@ -119,6 +124,7 @@ public class MainActivity extends SDLActivity
 
     /**
      * This method is for arguments for launching native mkxp-z.
+     * 
      * @return arguments for the mkxp-z
      */
     @Override
@@ -138,15 +144,70 @@ public class MainActivity extends SDLActivity
     }
 
     /**
-     * This method is used in native mkxp-z. (see systemImpl.cpp)
-     * This method returns current device locale tag. (e.g. "en_US")
+     * This static method is used in native mkxp-z. (see systemImpl.cpp)
+     * This method returns a string of current device locale tag. (e.g. "en_US")
+     * 
      * @return string of locale tag
      */
     @SuppressWarnings("unused")
     private static String getSystemLanguage()
     {
-        Locale locale = Locale.getDefault();
+        return Locale.getDefault().toString();
+    }
 
-        return locale.toString();
+    /**
+     * This static method is used in native mkxp-z. (see android-binding.cpp)
+     * This method returns a boolean indicating that the device has a vibrator or not.
+     * 
+     * @return boolean
+     */
+    @SuppressWarnings("unused")
+    private static boolean hasVibrator()
+    {
+        Vibrator vib = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
+        return vib.hasVibrator();
+    }
+
+    /**
+     * This static method is used in native mkxp-z. (see android-binding.cpp)
+     * This method makes device vibrating with given milliseconds duration.
+     * 
+     * @param duration milliseconds duration of vibration
+     */
+    @SuppressWarnings("unused")
+    private static void vibrate(int duration)
+    {
+        Vibrator vib = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vib.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.EFFECT_HEAVY_CLICK));
+        } else {
+            vib.vibrate(duration);
+        }
+    }
+
+    /**
+     * This static method is used in native mkxp-z. (see android-binding.cpp)
+     * This method turns off the current device vibration.
+     */
+    @SuppressWarnings("unused")
+    private static void vibrateStop()
+    {
+        Vibrator vib = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
+        vib.cancel();
+    }
+
+    /**
+     * This static method is used in native mkxp-z. (see android-binding.cpp)
+     * This method returns a boolean indicating the app is in multi window mode or not.
+     * (Multi-window mode supports from Android 7.0 Nougat (API 24) and higher.)
+     * 
+     * @param activity current MainActivity instance
+     * @return boolean
+     */
+    @SuppressWarnings("unused")
+    private static boolean inMultiWindow(Activity activity)
+    {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && activity.isInMultiWindowMode();
     }
 }

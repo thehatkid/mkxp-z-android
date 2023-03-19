@@ -97,6 +97,10 @@ void graphicsBindingInit();
 
 void fileIntBindingInit();
 
+#ifdef MKXPZ_BUILD_ANDROID
+void androidBindingInit();
+#endif
+
 #ifdef MKXPZ_MINIFFI
 void MiniFFIBindingInit();
 #endif
@@ -178,6 +182,10 @@ static void mriBindingInit()
 	graphicsBindingInit();
 
 	fileIntBindingInit();
+
+#ifdef MKXPZ_BUILD_ANDROID
+	androidBindingInit();
+#endif
 
 #ifdef MKXPZ_MINIFFI
 	MiniFFIBindingInit();
