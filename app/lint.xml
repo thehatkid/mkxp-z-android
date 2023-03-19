@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!-- Ignore everything that goes from SDL -->
+    <issue id="all">
+        <ignore path="src/main/java/org/libsdl" />
+    </issue>
+</lint>
