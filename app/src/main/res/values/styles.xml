@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- You can make custom themes with custom style items for activities here. -->
+    <!-- You can make custom themes with custom style items for activities and views here. -->
 
     <style name="AppTheme" parent="android:Theme.Material.NoActionBar">
         <!-- Custom style items for main theme goes here. -->
+        <item name="android:colorBackground">#000000</item>
     </style>
 
     <style name="GamepadButton" />
