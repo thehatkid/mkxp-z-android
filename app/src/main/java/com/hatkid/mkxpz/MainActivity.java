@@ -9,10 +9,14 @@ import android.view.MotionEvent;
 import android.view.InputDevice;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Vibrator;
 import android.os.VibrationEffect;
+import android.os.storage.StorageManager;
+import android.os.storage.OnObbStateChangeListener;
 import android.util.Log;
 import java.util.Locale;
+import java.io.File;
 
 import org.libsdl.app.SDLActivity;
 import com.hatkid.mkxpz.gamepad.Gamepad;
@@ -24,15 +28,77 @@ public class MainActivity extends SDLActivity
     // Put your Java-side stuff here.
 
     private static final String TAG = "mkxp-z[Activity]";
-    protected static boolean DEBUG = false;
+    private static final String GAME_PATH_DEFAULT = Environment.getExternalStorageDirectory() + "/mkxp-z";
+    private static String GAME_PATH = GAME_PATH_DEFAULT;
+    private static String OBB_MAIN_FILENAME;
+    private static boolean DEBUG = false;
+
+    protected boolean mStarted = false;
+
+    private StorageManager mStorageManager;
 
     // In-screen gamepad
-    public Gamepad gpad = new Gamepad();
+    private final Gamepad mGamepad = new Gamepad();
     private boolean mGamepadInvisible = false;
 
-    @Override
-    protected void onStart()
+    private void runSDLThread()
     {
+        if (!mStarted) {
+            Log.i(TAG, "Game path: " + GAME_PATH);
+        }
+
+        mStarted = true;
+
+        // Run (resume) native SDL thread
+        if (mHasMultiWindow) {
+            resumeNativeThread();
+        }
+    }
+
+    OnObbStateChangeListener obbListener = new OnObbStateChangeListener()
+    {
+        @Override
+        public void onObbStateChange(String path, int state)
+        {
+            super.onObbStateChange(path, state);
+
+            Log.v(TAG, "OBB state of " + path + " changed to " + state);
+
+            switch (state)
+            {
+                case OnObbStateChangeListener.MOUNTED:
+                    String obbPath = mStorageManager.getMountedObbPath(path);
+                    Log.v(TAG, "OBB " + path + " is mounted to " + obbPath);
+                    GAME_PATH = obbPath;
+                    break;
+
+                case OnObbStateChangeListener.UNMOUNTED:
+                    Log.v(TAG, "OBB " + path + " is unmounted");
+                    GAME_PATH = GAME_PATH_DEFAULT;
+                    break;
+
+                default:
+                    Log.e(TAG, "Failed to mount OBB " + path + ": Got state " + state);
+                    break;
+            }
+
+            runSDLThread();
+        }
+    };
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState)
+    {
+        super.onCreate(savedInstanceState);
+
+        mStorageManager = (StorageManager) getSystemService(STORAGE_SERVICE);
+
+        // Get main OBB filepath
+        final String obbPrefix = "main"; // "main", "patch"
+        final int obbVersion = 1;
+        OBB_MAIN_FILENAME = getObbDir() + "/" + obbPrefix + "." + obbVersion + "." + getPackageName() + ".obb";
+
+        // Get Debug flag
         try {
             ActivityInfo actInfo = getPackageManager().getActivityInfo(this.getComponentName(), PackageManager.GET_META_DATA);
             DEBUG = actInfo.metaData.getBoolean("mkxp_debug");
@@ -41,21 +107,37 @@ public class MainActivity extends SDLActivity
             e.printStackTrace();
         }
 
-        super.onStart();
+        // Setup in-screen gamepad
+        GamepadConfig gpadConfig = new GamepadConfig();
+        mGamepad.init(gpadConfig);
+        mGamepad.setOnKeyDownListener(SDLActivity::onNativeKeyDown);
+        mGamepad.setOnKeyUpListener(SDLActivity::onNativeKeyUp);
+
+        if (mLayout != null) {
+            mGamepad.attachTo(this, mLayout);
+        }
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState)
+    protected void onStart()
     {
-        super.onCreate(savedInstanceState);
+        super.onStart();
 
-        GamepadConfig gpadConfig = new GamepadConfig();
-        gpad.init(gpadConfig);
-        gpad.setOnKeyDownListener(SDLActivity::onNativeKeyDown);
-        gpad.setOnKeyUpListener(SDLActivity::onNativeKeyUp);
+        if (!mStarted) {
+            if (new File(OBB_MAIN_FILENAME).exists()) {
+                Log.v(TAG, "Main OBB file found, starting with main OBB mount");
 
-        if (mLayout != null) {
-            gpad.attachTo(this, mLayout);
+                // Try to mount main OBB file
+                mStorageManager.mountObb(OBB_MAIN_FILENAME, null, obbListener);
+            } else {
+                Log.v(TAG, "Main OBB file not found, starting without main OBB mount");
+
+                // Run from default game directory
+                runSDLThread();
+            }
+        } else {
+            // onStart: Resume SDL thread
+            runSDLThread();
         }
     }
 
@@ -87,15 +169,14 @@ public class MainActivity extends SDLActivity
             )
         ) {
             // Hide gamepad view on key events when visible
-            if (gpad != null && !mGamepadInvisible) {
-                gpad.hideView();
+            if (!mGamepadInvisible) {
+                mGamepad.hideView();
                 mGamepadInvisible = true;
             }
         }
 
-        if (gpad != null)
-            if (gpad.processGamepadEvent(evt))
-                return true;
+        if (mGamepad.processGamepadEvent(evt))
+            return true;
 
         return super.dispatchKeyEvent(evt);
     }
@@ -104,8 +185,8 @@ public class MainActivity extends SDLActivity
     public boolean dispatchTouchEvent(MotionEvent evt)
     {
         // Show gamepad view on touch when hidden
-        if (gpad != null && mGamepadInvisible) {
-            gpad.showView();
+        if (mGamepadInvisible) {
+            mGamepad.showView();
             mGamepadInvisible = false;
         }
 
@@ -115,9 +196,8 @@ public class MainActivity extends SDLActivity
     @Override
     public boolean onGenericMotionEvent(MotionEvent evt)
     {
-        if (gpad != null)
-            if (gpad.processDPadEvent(evt))
-                return true;
+        if (mGamepad.processDPadEvent(evt))
+            return true;
 
         return super.onGenericMotionEvent(evt);
     }

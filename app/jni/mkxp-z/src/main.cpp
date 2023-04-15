@@ -59,6 +59,10 @@ extern "C" {
 }
 #endif
 
+#ifdef __ANDROID__
+#include <jni.h>
+#endif
+
 #ifdef MKXPZ_STEAM
 #include "steamshim_child.h"
 #endif
@@ -250,6 +254,14 @@ int main(int argc, char *argv[])
 #endif
 	*/
 #ifdef MKXPZ_BUILD_ANDROID
+	// Get GAME_PATH string field from JNI (MainActivity.java)
+	JNIEnv *env = (JNIEnv *)SDL_AndroidGetJNIEnv();
+	jobject activity = (jobject)SDL_AndroidGetActivity();
+	jclass cls = env->GetObjectClass(activity);
+	jfieldID fIDGamePath = env->GetStaticFieldID(cls, "GAME_PATH", "Ljava/lang/String;");
+	jstring strJGamePath = (jstring)env->GetStaticObjectField(cls, fIDGamePath);
+	const char *dataDir = env->GetStringUTFChars(strJGamePath, 0);
+
 	// Request storage permission
 	if (!SDL_AndroidRequestPermission("android.permission.WRITE_EXTERNAL_STORAGE")) {
 		showInitError("Failed to get external storage. Please check the app permissions.");
@@ -258,8 +270,6 @@ int main(int argc, char *argv[])
 	}
 
 	// Set and ensure current directory
-	// TODO: somehow make that not hardcoded, maybe?
-	const char *dataDir = "/sdcard/mkxp-z";
 	if (!mkxp_fs::directoryExists(dataDir)) {
 		char buf[200];
 		snprintf(buf, sizeof(buf), "Failed to set current directory to %s", dataDir);
@@ -268,6 +278,10 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 	mkxp_fs::setCurrentDirectory(dataDir);
+
+	env->ReleaseStringUTFChars(strJGamePath, dataDir);
+	env->DeleteLocalRef(strJGamePath);
+	env->DeleteLocalRef(cls);
 #endif
 
 	// Load configuration

@@ -492,9 +492,11 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
     protected void onStart() {
         Log.v(TAG, "onStart()");
         super.onStart();
-        if (mHasMultiWindow) {
-            resumeNativeThread();
-        }
+        // At this moment, We are now starting SDL thread from MainActivity
+        // using the runSDLThread method.
+        //if (mHasMultiWindow) {
+        //    resumeNativeThread();
+        //}
     }
 
     public static int getCurrentOrientation() {
