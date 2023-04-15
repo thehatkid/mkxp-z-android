@@ -2,6 +2,7 @@ package com.hatkid.mkxpz;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.view.KeyEvent;
@@ -14,6 +15,8 @@ import android.os.Vibrator;
 import android.os.VibrationEffect;
 import android.os.storage.StorageManager;
 import android.os.storage.OnObbStateChangeListener;
+import android.net.Uri;
+import android.provider.Settings;
 import android.util.Log;
 import java.util.Locale;
 import java.io.File;
@@ -87,6 +90,17 @@ public class MainActivity extends SDLActivity
     };
 
     @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        if (requestCode == 110) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
+                // Close the App because the User did not allow the all files access permission to be used.
+                mSingleton.finish();
+            }
+        }
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
@@ -107,6 +121,17 @@ public class MainActivity extends SDLActivity
             e.printStackTrace();
         }
 
+        // Check for all files access permission (Android 11+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                // Request all files access permission
+                // TODO: AlertDialog: polite notice that mkxp-z requires All Files Access permission.
+                Uri uri = Uri.parse("package:" + BuildConfig.APPLICATION_ID);
+                Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, uri);
+                startActivityForResult(intent, 110);
+            }
+        }
+
         // Setup in-screen gamepad
         GamepadConfig gpadConfig = new GamepadConfig();
         mGamepad.init(gpadConfig);
@@ -124,6 +149,7 @@ public class MainActivity extends SDLActivity
         super.onStart();
 
         if (!mStarted) {
+            // Check for main OBB file
             if (new File(OBB_MAIN_FILENAME).exists()) {
                 Log.v(TAG, "Main OBB file found, starting with main OBB mount");
 

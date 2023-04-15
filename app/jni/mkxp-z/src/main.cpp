@@ -61,6 +61,7 @@ extern "C" {
 
 #ifdef __ANDROID__
 #include <jni.h>
+#include <sys/system_properties.h>
 #endif
 
 #ifdef MKXPZ_STEAM
@@ -254,6 +255,10 @@ int main(int argc, char *argv[])
 #endif
 	*/
 #ifdef MKXPZ_BUILD_ANDROID
+	char sdkVersionChar[PROP_VALUE_MAX];
+	__system_property_get("ro.build.version.sdk", sdkVersionChar);
+	int sdkVersion = atoi(sdkVersionChar);
+
 	// Get GAME_PATH string field from JNI (MainActivity.java)
 	JNIEnv *env = (JNIEnv *)SDL_AndroidGetJNIEnv();
 	jobject activity = (jobject)SDL_AndroidGetActivity();
@@ -262,11 +267,13 @@ int main(int argc, char *argv[])
 	jstring strJGamePath = (jstring)env->GetStaticObjectField(cls, fIDGamePath);
 	const char *dataDir = env->GetStringUTFChars(strJGamePath, 0);
 
-	// Request storage permission
-	if (!SDL_AndroidRequestPermission("android.permission.WRITE_EXTERNAL_STORAGE")) {
-		showInitError("Failed to get external storage. Please check the app permissions.");
-		SDL_Quit();
-		return 0;
+	// Request storage permission (before Android 11)
+	if (sdkVersion < 30) {
+		if (!SDL_AndroidRequestPermission("android.permission.WRITE_EXTERNAL_STORAGE")) {
+			showInitError("Failed to get external storage. Please check the app permissions.");
+			SDL_Quit();
+			return 0;
+		}
 	}
 
 	// Set and ensure current directory
