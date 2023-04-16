@@ -49,6 +49,34 @@ RB_METHOD(androidDeviceInfo)
 	return hash;
 }
 
+RB_METHOD(androidIsTablet)
+{
+	RB_UNUSED_PARAM;
+
+	return rb_bool_new(SDL_IsTablet() == SDL_TRUE);
+}
+
+RB_METHOD(androidIsTV)
+{
+	RB_UNUSED_PARAM;
+
+	return rb_bool_new(SDL_IsAndroidTV() == SDL_TRUE);
+}
+
+RB_METHOD(androidIsChromebook)
+{
+	RB_UNUSED_PARAM;
+
+	return rb_bool_new(SDL_IsChromebook() == SDL_TRUE);
+}
+
+RB_METHOD(androidIsDeXMode)
+{
+	RB_UNUSED_PARAM;
+
+	return rb_bool_new(SDL_IsDeXMode() == SDL_TRUE);
+}
+
 RB_METHOD(androidHasVibrator)
 {
 	RB_UNUSED_PARAM;
@@ -126,26 +154,15 @@ RB_METHOD(androidInMultiWindow)
 
 void androidBindingInit()
 {
-	JNIEnv *env = (JNIEnv *)SDL_AndroidGetJNIEnv();
-	jclass cls = env->FindClass("android/os/Build$VERSION");
-
-	jfieldID fIDSdkInt = env->GetStaticFieldID(cls, "SDK_INT", "I");
-	int sdkInt = env->GetStaticIntField(cls, fIDSdkInt);
-
-	jfieldID fIDRelName = env->GetStaticFieldID(cls, "RELEASE", "Ljava/lang/String;");
-	jstring strJRelName = (jstring)env->GetStaticObjectField(cls, fIDRelName);
-	const char *strCRelName = env->GetStringUTFChars(strJRelName, 0);
-
-	env->ReleaseStringUTFChars(strJRelName, strCRelName);
-	env->DeleteLocalRef(strJRelName);
-	env->DeleteLocalRef(cls);
-
 	VALUE module = rb_define_module("Android");
 
 	// Android version/device info
-	rb_const_set(module, rb_intern("API_LEVEL"), INT2NUM(sdkInt));
-	rb_const_set(module, rb_intern("RELEASE"), rb_str_new_cstr(strCRelName));
+	rb_const_set(module, rb_intern("SDK_VERSION"), INT2NUM(SDL_GetAndroidSDKVersion()));
 	_rb_define_module_function(module, "device", androidDeviceInfo);
+	_rb_define_module_function(module, "is_tablet?", androidIsTablet);
+	_rb_define_module_function(module, "is_tv?", androidIsTV);
+	_rb_define_module_function(module, "is_chromebook?", androidIsChromebook);
+	_rb_define_module_function(module, "is_dex_mode?", androidIsDeXMode);
 
 	// Vibration
 	_rb_define_module_function(module, "has_vibrator?", androidHasVibrator);
