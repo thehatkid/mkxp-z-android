@@ -16,6 +16,7 @@ import com.hatkid.mkxpz.utils.ViewUtils;
 public class Gamepad
 {
     private GamepadConfig mGamepadConfig = null;
+    private boolean mInvisible = false;
 
     private OnKeyDownListener mOnKeyDownListener = key -> {};
     private OnKeyUpListener mOnKeyUpListener = key -> {};
@@ -55,9 +56,10 @@ public class Gamepad
     private GamepadButton gpadBtnALT;
     private GamepadButton gpadBtnSHIFT;
 
-    public void init(GamepadConfig gpadConfig)
+    public void init(GamepadConfig gpadConfig, boolean invisible)
     {
         mGamepadConfig = gpadConfig;
+        mInvisible = invisible;
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -67,6 +69,10 @@ public class Gamepad
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         ViewGroup layout = (ViewGroup) inflater.inflate(R.layout.gamepad_layout, viewGroup);
         mGamepadLayout = layout.findViewById(R.id.gamepad_layout);
+
+        if (mInvisible) {
+            mGamepadLayout.setAlpha(0);
+        }
 
         // Setup D-Pad and buttons
         GamepadDPad gpadDPad = layout.findViewById(R.id.dpad);
@@ -116,6 +122,9 @@ public class Gamepad
     public void showView()
     {
         if (mGamepadLayout != null) {
+            if (mGamepadLayout.getAlpha() == 0)
+                mGamepadLayout.setAlpha(1);
+
             AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
             anim.setDuration(250);
             anim.setFillAfter(true);

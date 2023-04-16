@@ -133,8 +133,9 @@ public class MainActivity extends SDLActivity
         }
 
         // Setup in-screen gamepad
+        mGamepadInvisible = (isAndroidTV() || isChromebook());
         GamepadConfig gpadConfig = new GamepadConfig();
-        mGamepad.init(gpadConfig);
+        mGamepad.init(gpadConfig, mGamepadInvisible);
         mGamepad.setOnKeyDownListener(SDLActivity::onNativeKeyDown);
         mGamepad.setOnKeyUpListener(SDLActivity::onNativeKeyUp);
 
@@ -182,17 +183,10 @@ public class MainActivity extends SDLActivity
     public boolean dispatchKeyEvent(KeyEvent evt)
     {
         if (
-            (
-                evt.getKeyCode() != KeyEvent.KEYCODE_BACK &&
-                evt.getKeyCode() != KeyEvent.KEYCODE_VOLUME_UP &&
-                evt.getKeyCode() != KeyEvent.KEYCODE_VOLUME_DOWN &&
-                evt.getKeyCode() != KeyEvent.KEYCODE_VOLUME_MUTE
-            ) && (
-                evt.getSource() == InputDevice.SOURCE_DPAD ||
-                evt.getSource() == InputDevice.SOURCE_GAMEPAD ||
-                evt.getSource() == InputDevice.SOURCE_JOYSTICK ||
-                evt.getSource() == InputDevice.SOURCE_KEYBOARD
-            )
+            evt.getKeyCode() != KeyEvent.KEYCODE_BACK &&
+            evt.getKeyCode() != KeyEvent.KEYCODE_VOLUME_UP &&
+            evt.getKeyCode() != KeyEvent.KEYCODE_VOLUME_DOWN &&
+            evt.getKeyCode() != KeyEvent.KEYCODE_VOLUME_MUTE
         ) {
             // Hide gamepad view on key events when visible
             if (!mGamepadInvisible) {
