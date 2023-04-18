@@ -126,7 +126,7 @@ public class MainActivity extends SDLActivity
             if (!Environment.isExternalStorageManager()) {
                 // Request all files access permission
                 // TODO: AlertDialog: polite notice that mkxp-z requires All Files Access permission.
-                Uri uri = Uri.parse("package:" + BuildConfig.APPLICATION_ID);
+                Uri uri = Uri.parse("package:" + getPackageName());
                 Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, uri);
                 startActivityForResult(intent, 110);
             }
