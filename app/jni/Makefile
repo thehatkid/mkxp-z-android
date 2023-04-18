@@ -48,7 +48,7 @@ endif
 # Toolchain tools
 CC      := $(TOOLCHAIN)/bin/$(PREFIX)-clang
 CXX     := $(TOOLCHAIN)/bin/$(PREFIX)-clang++
-AS      := $(CC)
+AS      := $(TOOLCHAIN)/bin/llvm-as
 LD      := $(TOOLCHAIN)/bin/ld
 AR      := $(TOOLCHAIN)/bin/llvm-ar
 NM      := $(TOOLCHAIN)/bin/llvm-nm
@@ -133,10 +133,34 @@ CONFIGURE := $(CONFIGURE_ENV) ./configure $(CONFIGURE_ARGS)
 CMAKE     := $(CONFIGURE_ENV) cmake .. $(CMAKE_ARGS)
 
 
-.PHONY: all init clean iconv openal openssl ruby clean-iconv clean-openal clean-openssl clean-ruby
+.PHONY: all init clean cpufeatures pixman iconv openal openssl ruby clean-pixman clean-iconv clean-openal clean-openssl clean-ruby
 
 default: all
 
+
+# -------------------- Android CPU features --------------------
+cpufeatures: init $(LIBDIR)/libcpufeatures.a
+
+$(LIBDIR)/libcpufeatures.a: $(LIBDIR)/cpu-features.o
+	$(AR) rc $(LIBDIR)/libcpufeatures.a $(LIBDIR)/cpu-features.o
+
+$(LIBDIR)/cpu-features.o:
+	$(CC) -c $(NDK)/sources/android/cpufeatures/cpu-features.c -o $(LIBDIR)/cpu-features.o -Wall -Wextra -Werror
+
+# -------------------- Pixman --------------------
+pixman: init cpufeatures $(LIBDIR)/libpixman-1.a
+
+$(LIBDIR)/libpixman-1.a: pixman/Makefile
+	cd pixman; make -j$(NPROC); make install
+
+pixman/Makefile: pixman/configure
+	cd pixman; $(CONFIGURE_ENV) \
+	CFLAGS="$(CFLAGS) -fno-integrated-as -I$(NDK)/sources/android/cpufeatures" \
+	LDFLAGS="$(LDFLAGS) -lcpufeatures" \
+	./configure $(CONFIGURE_ARGS) --enable-static=true --enable-shared=false
+
+pixman/configure: pixman/configure.ac
+	cd pixman; autoreconf -i
 
 # -------------------- iconv --------------------
 iconv: init $(LIBDIR)/libiconv.a
@@ -185,6 +209,9 @@ ruby/configure: ruby/configure.ac
 init:
 	@mkdir -p $(LIBDIR) $(INCDIR)
 
+clean-pixman:
+	-cd pixman; make clean; rm Makefile; rm configure
+
 clean-iconv:
 	-cd libiconv; make clean; rm Makefile
 
@@ -197,6 +224,6 @@ clean-openssl:
 clean-ruby:
 	-cd ruby; make clean; rm Makefile; rm configure
 
-clean: clean-iconv clean-openal clean-openssl clean-ruby
+clean: clean-pixman clean-iconv clean-openal clean-openssl clean-ruby
 
-all: iconv openal openssl ruby
+all: pixman iconv openal openssl ruby
