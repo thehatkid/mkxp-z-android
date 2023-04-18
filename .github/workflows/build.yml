@@ -1,0 +1,68 @@
+name: Android CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'app/**'
+  push:
+    paths:
+      - 'app/**'
+
+jobs:
+  build-apk:
+    name: Build APK
+    runs-on: ubuntu-22.04
+    env:
+      ARCH: linux-x86_64
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.1'
+          bundler-cache: false
+      - name: Get dependencies
+        working-directory: ${{ github.workspace }}/app/jni
+        run: ./get_deps.sh
+      - name: Restore cache
+        id: cache-restore
+        uses: actions/cache/restore@v3
+        with:
+          path: app/jni/build-*
+          key: jni-build-${{ hashFiles('app/jni/Makefile') }}
+      - name: Build libraries (ARMv7 32-bit)
+        if: steps.cache-restore.outputs.cache-hit != 'true'
+        working-directory: ${{ github.workspace }}/app/jni
+        run: |
+          export ANDROID_NDK_HOME=$ANDROID_HOME/ndk/23.2.8568313
+          export PATH=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/$ARCH/bin:$PATH
+          HOST=armv7a-linux-androideabi TARGET=arm-linux-androideabi ABI=armeabi-v7a make
+          make clean
+      - name: Build libraries (ARMv8 64-bit)
+        if: steps.cache-restore.outputs.cache-hit != 'true'
+        working-directory: ${{ github.workspace }}/app/jni
+        run: |
+          export ANDROID_NDK_HOME=$ANDROID_HOME/ndk/23.2.8568313
+          export PATH=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/$ARCH/bin:$PATH
+          HOST=aarch64-linux-android TARGET=aarch64-linux-android ABI=arm64-v8a make
+          make clean
+      - name: Save cache
+        id: cache-save
+        if: steps.cache-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v3
+        with:
+          path: app/jni/build-*
+          key: jni-build-${{ hashFiles('app/jni/Makefile') }}
+      - name: Prepare mkxp-z files
+        working-directory: ${{ github.workspace }}/app/jni/mkxp-z
+        run: ./make_xxd.sh
+      - name: Build APK
+        working-directory: ${{ github.workspace }}
+        run: ./gradlew assembleDebug
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: apk-debug
+          path: app/build/outputs/apk/debug/*.apk
