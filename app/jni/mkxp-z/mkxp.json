@@ -50,9 +50,9 @@
 
     // Start game in fullscreen (this can
     // always be toggled with Alt-Enter at runtime)
-    // (default: disabled)
+    // (default: enabled)
     //
-    // "fullscreen": false,
+    // "fullscreen": true,
 
 
     // Preserve game screen aspect ratio,

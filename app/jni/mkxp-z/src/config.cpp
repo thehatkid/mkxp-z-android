@@ -131,7 +131,7 @@ void Config::read(int argc, char *argv[]) {
         {"debugMode", false},
         {"printFPS", false},
         {"winResizable", true},
-        {"fullscreen", false},
+        {"fullscreen", true},
         {"fixedAspectRatio", true},
         {"smoothScaling", false},
         {"vsync", false},

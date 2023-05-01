@@ -53,10 +53,11 @@
         <activity
             android:name=".MainActivity"
             android:label="mkxp-z"
+            android:launchMode="singleTop"
             android:alwaysRetainTaskState="true"
-            android:launchMode="singleTask"
             android:screenOrientation="sensorLandscape"
             android:configChanges="layoutDirection|locale|orientation|uiMode|screenLayout|screenSize|smallestScreenSize|density|keyboard|keyboardHidden|navigation"
+            android:immersive="true"
             android:resizeableActivity="true"
             android:preferMinimalPostProcessing="true"
             android:exported="true"
