@@ -38,13 +38,13 @@ fi
 # Freedesktop uchardet
 if [[ ! -d "uchardet" ]]; then
   echo "Downloading uchardet..."
-  git clone $GIT_ARGS -b v0.0.8 https://github.com/freedesktop/uchardet uchardet
+  git clone $GIT_ARGS -b v0.0.8 https://gitlab.freedesktop.org/uchardet/uchardet.git/ uchardet
 fi
 
 # Freedesktop Pixman
 if [[ ! -d "pixman" ]]; then
   echo "Downloading Pixman..."
-  git clone $GIT_ARGS -b pixman-0.42.2 https://github.com/freedesktop/pixman pixman
+  git clone $GIT_ARGS -b pixman-0.42.2 https://gitlab.freedesktop.org/pixman/pixman.git/ pixman
 fi
 
 # PhysicsFS
