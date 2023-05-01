@@ -90,7 +90,7 @@ public class GamepadButton extends ImageView
     @Override
     public void setBackgroundResource(int drawableResource)
     {
-        Drawable backgroundDrawable = getContext().getResources().getDrawable(drawableResource);
+        Drawable backgroundDrawable = getContext().getResources().getDrawable(drawableResource, getContext().getTheme());
         setBackground(backgroundDrawable);
     }
 
@@ -104,7 +104,7 @@ public class GamepadButton extends ImageView
 
     public void setForegroundResource(int drawableResource)
     {
-        Drawable foregroundDrawable = getContext().getResources().getDrawable(drawableResource);
+        Drawable foregroundDrawable = getContext().getResources().getDrawable(drawableResource, getContext().getTheme());
         setForeground(foregroundDrawable);
     }
 
