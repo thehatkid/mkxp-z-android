@@ -45,6 +45,11 @@
 #include "TouchBar.h"
 #endif
 
+#ifdef MKXPZ_BUILD_ANDROID
+#include <SDL.h>
+#include <jni.h>
+#endif
+
 #include "al-util.h"
 #include "debugwriter.h"
 
@@ -81,6 +86,38 @@ static void initALCFunctions(ALCdevice *alcDev)
 }
 
 #define HAVE_ALC_DEVICE_PAUSE alc.DevicePause
+
+#ifdef MKXPZ_BUILD_ANDROID
+static void jniSetFPSVisibility(bool state)
+{
+	JNIEnv *env = (JNIEnv *)SDL_AndroidGetJNIEnv();
+	jobject activity = (jobject)SDL_AndroidGetActivity();
+	jclass cls = env->GetObjectClass(activity);
+
+	jmethodID mID = env->GetStaticMethodID(cls, "setFPSVisibility", "(Z)V");
+	SDL_assert(mID != 0);
+
+	env->CallStaticVoidMethod(cls, mID, state);
+
+	env->DeleteLocalRef(cls);
+	env->DeleteLocalRef(activity);
+}
+
+static void jniUpdateFPSText(int num)
+{
+	JNIEnv *env = (JNIEnv *)SDL_AndroidGetJNIEnv();
+	jobject activity = (jobject)SDL_AndroidGetActivity();
+	jclass cls = env->GetObjectClass(activity);
+
+	jmethodID mID = env->GetStaticMethodID(cls, "updateFPSText", "(I)V");
+	SDL_assert(mID != 0);
+
+	env->CallStaticVoidMethod(cls, mID, (jint)num);
+
+	env->DeleteLocalRef(cls);
+	env->DeleteLocalRef(activity);
+}
+#endif
 
 uint8_t EventThread::keyStates[];
 EventThread::ControllerState EventThread::controllerState;
@@ -152,8 +189,12 @@ void EventThread::process(RGSSThreadData &rtData)
 	fullscreen = rtData.config.fullscreen;
 	int toggleFSMod = rtData.config.anyAltToggleFS ? KMOD_ALT : KMOD_LALT;
 
-	if (rtData.config.printFPS)
+	if (rtData.config.printFPS) {
 		fps.sendUpdates.set();
+#ifdef MKXPZ_BUILD_ANDROID
+		jniSetFPSVisibility(true);
+#endif
+	}
 
 	bool displayingFPS = false;
 
@@ -339,7 +380,13 @@ void EventThread::process(RGSSThreadData &rtData)
 					if (!displayingFPS) {
 						fps.sendUpdates.set();
 						displayingFPS = true;
+#ifdef MKXPZ_BUILD_ANDROID
+						jniSetFPSVisibility(true);
+#endif
 					} else {
+#ifdef MKXPZ_BUILD_ANDROID
+						jniSetFPSVisibility(false);
+#endif
 						displayingFPS = false;
 
 						if (!rtData.config.printFPS)
@@ -549,6 +596,10 @@ void EventThread::process(RGSSThreadData &rtData)
 							break;
 
 						snprintf(buffer, sizeof(buffer), "%s - %d FPS", rtData.config.windowTitle.c_str(), event.user.code);
+
+#ifdef MKXPZ_BUILD_ANDROID
+						jniUpdateFPSText(event.user.code);
+#endif
 
 						// Updating the window title in fullscreen mode
 						// seems to cause flickering

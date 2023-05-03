@@ -5,12 +5,18 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.view.View;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.InputDevice;
+import android.view.ViewGroup.LayoutParams;
+import android.widget.TextView;
+import android.widget.LinearLayout;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.Vibrator;
 import android.os.VibrationEffect;
 import android.os.storage.StorageManager;
@@ -18,6 +24,7 @@ import android.os.storage.OnObbStateChangeListener;
 import android.net.Uri;
 import android.provider.Settings;
 import android.util.Log;
+import android.util.DisplayMetrics;
 import java.util.Locale;
 import java.io.File;
 
@@ -38,7 +45,10 @@ public class MainActivity extends SDLActivity
 
     protected boolean mStarted = false;
 
-    private StorageManager mStorageManager;
+    protected static Handler mMainHandler;
+    protected static StorageManager mStorageManager;
+
+    protected static TextView tvFps;
 
     // In-screen gamepad
     private final Gamepad mGamepad = new Gamepad();
@@ -105,6 +115,8 @@ public class MainActivity extends SDLActivity
     {
         super.onCreate(savedInstanceState);
 
+        mMainHandler = new Handler(getMainLooper());
+
         mStorageManager = (StorageManager) getSystemService(STORAGE_SERVICE);
 
         // Get main OBB filepath
@@ -142,6 +154,18 @@ public class MainActivity extends SDLActivity
         if (mLayout != null) {
             mGamepad.attachTo(this, mLayout);
         }
+
+        // Setup FPS textview
+        tvFps = new TextView(this);
+        tvFps.setTextSize((8 * ((float) getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT)));
+        tvFps.setTextColor(Color.argb(96, 255, 255, 255));
+        tvFps.setVisibility(View.GONE);
+
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        params.setMargins(16, 16, 0, 0);
+        tvFps.setLayoutParams(params);
+
+        mLayout.addView(tvFps);
     }
 
     @Override
@@ -241,6 +265,31 @@ public class MainActivity extends SDLActivity
         }
 
         return args;
+    }
+
+    /**
+     * This static method is used in native mkxp-z. (see eventthread.cpp)
+     * This method updates text with given FPS count to FPS TextView in Activity.
+     */
+    @SuppressWarnings("unused")
+    private static void updateFPSText(int num)
+    {
+        mMainHandler.post(() -> tvFps.setText(String.valueOf(num) + " FPS"));
+    }
+
+    /**
+     * This static method is used in native mkxp-z. (see eventthread.cpp)
+     * This method sets the visibility of FPS TextView in Activity.
+     */
+    @SuppressWarnings("unused")
+    private static void setFPSVisibility(boolean visible)
+    {
+        mMainHandler.post(() -> {
+            if (visible)
+                tvFps.setVisibility(View.VISIBLE);
+            else
+                tvFps.setVisibility(View.INVISIBLE);
+        });
     }
 
     /**
