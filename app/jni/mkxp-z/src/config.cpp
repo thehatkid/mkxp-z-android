@@ -235,10 +235,14 @@ try { exp } catch (...) {}
     SET_OPT(defScreenW, integer);
     SET_OPT(defScreenH, integer);
     
+    // In Android NDK, C++ exceptions makes mkxp-z to exit
+    // without any error infos, so we handling that in main.cpp
+#ifndef MKXPZ_BUILD_ANDROID
     // Take a break real quick and witch to set game folder and read the game's ini
     if (!gameFolder.empty() && !mkxp_fs::setCurrentDirectory(gameFolder.c_str())) {
         throw Exception(Exception::MKXPError, "Unable to switch into gameFolder %s", gameFolder.c_str());
     }
+#endif
     
     readGameINI();
     

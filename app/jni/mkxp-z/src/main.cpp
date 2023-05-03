@@ -295,6 +295,21 @@ int main(int argc, char *argv[])
 	Config conf;
 	conf.read(argc, argv);
 
+#ifdef MKXPZ_BUILD_ANDROID
+	// Ensure gameFolder directory from config file
+	if (!conf.gameFolder.empty()) {
+		if (!mkxp_fs::directoryExists(conf.gameFolder.c_str())) {
+			char buf[200];
+			snprintf(buf, sizeof(buf), "Unable to switch into gameFolder to %s", conf.gameFolder.c_str());
+			showInitError(std::string(buf));
+			SDL_Quit();
+			return 0;
+		} else {
+			mkxp_fs::setCurrentDirectory(conf.gameFolder.c_str());
+		}
+	}
+#endif
+
 #if defined(__WIN32__)
 	// Create a debug console in debug mode
 	if (conf.winConsole) {
