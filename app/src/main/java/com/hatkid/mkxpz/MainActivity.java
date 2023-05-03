@@ -47,6 +47,7 @@ public class MainActivity extends SDLActivity
 
     protected static Handler mMainHandler;
     protected static StorageManager mStorageManager;
+    protected static Vibrator mVibrator;
 
     protected static TextView tvFps;
 
@@ -118,6 +119,7 @@ public class MainActivity extends SDLActivity
         mMainHandler = new Handler(getMainLooper());
 
         mStorageManager = (StorageManager) getSystemService(STORAGE_SERVICE);
+        mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
         // Get main OBB filepath
         final String obbPrefix = "main"; // "main", "patch"
@@ -210,7 +212,8 @@ public class MainActivity extends SDLActivity
             evt.getKeyCode() != KeyEvent.KEYCODE_BACK &&
             evt.getKeyCode() != KeyEvent.KEYCODE_VOLUME_UP &&
             evt.getKeyCode() != KeyEvent.KEYCODE_VOLUME_DOWN &&
-            evt.getKeyCode() != KeyEvent.KEYCODE_VOLUME_MUTE
+            evt.getKeyCode() != KeyEvent.KEYCODE_VOLUME_MUTE && 
+            evt.getKeyCode() != KeyEvent.KEYCODE_HEADSETHOOK
         ) {
             // Hide gamepad view on key events when visible
             if (!mGamepadInvisible) {
@@ -313,8 +316,7 @@ public class MainActivity extends SDLActivity
     @SuppressWarnings("unused")
     private static boolean hasVibrator()
     {
-        Vibrator vib = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
-        return vib.hasVibrator();
+        return mVibrator.hasVibrator();
     }
 
     /**
@@ -326,12 +328,14 @@ public class MainActivity extends SDLActivity
     @SuppressWarnings("unused")
     private static void vibrate(int duration)
     {
-        Vibrator vib = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
+        if (duration >= 10000) {
+            duration = 10000;
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vib.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.EFFECT_HEAVY_CLICK));
+            mVibrator.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.EFFECT_HEAVY_CLICK));
         } else {
-            vib.vibrate(duration);
+            mVibrator.vibrate(duration);
         }
     }
 
@@ -342,8 +346,7 @@ public class MainActivity extends SDLActivity
     @SuppressWarnings("unused")
     private static void vibrateStop()
     {
-        Vibrator vib = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
-        vib.cancel();
+        mVibrator.cancel();
     }
 
     /**

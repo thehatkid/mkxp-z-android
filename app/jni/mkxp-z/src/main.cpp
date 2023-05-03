@@ -304,8 +304,6 @@ int main(int argc, char *argv[])
 			showInitError(std::string(buf));
 			SDL_Quit();
 			return 0;
-		} else {
-			mkxp_fs::setCurrentDirectory(conf.gameFolder.c_str());
 		}
 	}
 #endif

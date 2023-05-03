@@ -242,6 +242,10 @@ try { exp } catch (...) {}
     if (!gameFolder.empty() && !mkxp_fs::setCurrentDirectory(gameFolder.c_str())) {
         throw Exception(Exception::MKXPError, "Unable to switch into gameFolder %s", gameFolder.c_str());
     }
+#else
+    if (!gameFolder.empty() && mkxp_fs::directoryExists(gameFolder.c_str())) {
+        mkxp_fs::setCurrentDirectory(gameFolder.c_str());
+    }
 #endif
     
     readGameINI();
