@@ -2,7 +2,6 @@ package com.hatkid.mkxpz.gamepad;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.Color;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.util.AttributeSet;

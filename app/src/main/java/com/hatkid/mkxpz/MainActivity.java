@@ -1,5 +1,6 @@
 package com.hatkid.mkxpz;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -8,7 +9,6 @@ import android.content.pm.PackageManager;
 import android.view.View;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
-import android.view.InputDevice;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.TextView;
 import android.widget.LinearLayout;
@@ -274,10 +274,11 @@ public class MainActivity extends SDLActivity
      * This static method is used in native mkxp-z. (see eventthread.cpp)
      * This method updates text with given FPS count to FPS TextView in Activity.
      */
+    @SuppressLint("SetTextI18n")
     @SuppressWarnings("unused")
     private static void updateFPSText(int num)
     {
-        mMainHandler.post(() -> tvFps.setText(String.valueOf(num) + " FPS"));
+        mMainHandler.post(() -> tvFps.setText(num + " FPS"));
     }
 
     /**
