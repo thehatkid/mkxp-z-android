@@ -962,8 +962,10 @@ void SyncPoint::Util::waitForUnlock()
 {
 	SDL_LockMutex(mut);
 
-	while (locked)
+	while (locked) {
+		// FIXME: Android: On older versions/devices can cause deadlock after app going to background
 		SDL_CondWait(cond, mut);
+	}
 
 	SDL_UnlockMutex(mut);
 }

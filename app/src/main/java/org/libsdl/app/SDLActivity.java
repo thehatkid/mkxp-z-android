@@ -535,23 +535,26 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         Log.v(TAG, "onWindowFocusChanged(): " + hasFocus);
 
         if (SDLActivity.mBrokenLibraries) {
-           return;
+            return;
         }
 
-        mHasFocus = hasFocus;
-        if (hasFocus) {
-           mNextNativeState = NativeState.RESUMED;
-           SDLActivity.getMotionListener().reclaimRelativeMouseModeIfNeeded();
-
-           SDLActivity.handleNativeState();
-           nativeFocusChanged(true);
-
-        } else {
-           nativeFocusChanged(false);
-           if (!mHasMultiWindow) {
-               mNextNativeState = NativeState.PAUSED;
-               SDLActivity.handleNativeState();
-           }
+        // HACK: Prevent mkxp-z threads deadlock on message boxes/out of focus on older Android devices
+        // (I don't know why when it sets native focus state, it also fires SDL_APP_WILLENTERBACKGROUND event,
+        // causing threads deadlock (and following ANR), so it still requires to investigate.)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            mHasFocus = hasFocus;
+            if (hasFocus) {
+                mNextNativeState = NativeState.RESUMED;
+                SDLActivity.getMotionListener().reclaimRelativeMouseModeIfNeeded();
+                SDLActivity.handleNativeState();
+                nativeFocusChanged(true);
+            } else {
+                nativeFocusChanged(false);
+                if (!mHasMultiWindow) {
+                    mNextNativeState = NativeState.PAUSED;
+                    SDLActivity.handleNativeState();
+                }
+            }
         }
     }
 
