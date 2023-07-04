@@ -385,6 +385,28 @@ void FileSystem::removePath(const char *path, bool reload) {
     if (reload) reloadPathCache();
 }
 
+#ifdef __ANDROID__
+void FileSystem::mountAPKAssets()
+{
+    /* Mount APK file and set root to assets folder */
+    const char *apkPath = PHYSFS_getBaseDir();
+
+    int state = PHYSFS_mount(apkPath, 0, 1);
+
+    if (!state) {
+        PHYSFS_ErrorCode err = PHYSFS_getLastErrorCode();
+        Debug() << "Failed to mount APK" << apkPath << ":" << PHYSFS_getErrorByCode(err);
+    } else {
+        state = PHYSFS_setRoot(apkPath, "/assets");
+        if (!state) {
+            PHYSFS_ErrorCode err = PHYSFS_getLastErrorCode();
+            Debug() << "Failed to set root to \"base.apk/assets\":" << PHYSFS_getErrorByCode(err);
+            PHYSFS_unmount(apkPath);
+        }
+    }
+}
+#endif
+
 struct CacheEnumData {
   FileSystemPrivate *p;
   std::stack<std::vector<std::string> *> fileLists;

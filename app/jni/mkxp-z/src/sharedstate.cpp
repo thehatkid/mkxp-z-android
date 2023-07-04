@@ -133,6 +133,10 @@ struct SharedStatePrivate
 			fclose(tmp);
 		}
 
+#ifdef MKXPZ_BUILD_ANDROID
+		fileSystem.mountAPKAssets();
+#endif
+
 		fileSystem.addPath(".");
 
 		for (size_t i = 0; i < config.rtps.size(); ++i)

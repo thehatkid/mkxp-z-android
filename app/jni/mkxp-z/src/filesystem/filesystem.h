@@ -42,6 +42,10 @@ public:
 	void addPath(const char *path, const char *mountpoint = 0, bool reload = false);
     void removePath(const char *path, bool reload = false);
 
+#ifdef __ANDROID__
+    void mountAPKAssets();
+#endif
+
 	/* Call these after the last 'addPath()' */
 	void createPathCache();
     
