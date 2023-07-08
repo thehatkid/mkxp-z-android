@@ -264,24 +264,6 @@ void EventThread::process(RGSSThreadData &rtData)
 		}
 #endif
 
-		// Preselect and discard unwanted events here
-		switch (event.type)
-		{
-			case SDL_MOUSEBUTTONDOWN:
-			case SDL_MOUSEBUTTONUP:
-			case SDL_MOUSEMOTION:
-				if (event.button.which == SDL_TOUCH_MOUSEID)
-					continue;
-				break;
-
-			case SDL_FINGERDOWN:
-			case SDL_FINGERUP:
-			case SDL_FINGERMOTION:
-				if (event.tfinger.fingerId >= MAX_FINGERS)
-					continue;
-				break;
-		}
-
 		// Now process the rest
 		switch (event.type)
 		{
@@ -480,10 +462,12 @@ void EventThread::process(RGSSThreadData &rtData)
 			case SDL_MOUSEWHEEL:
 				// Only consider vertical scrolling for now
 				SDL_AtomicAdd(&verticalScrollDistance, event.wheel.y);
+				break;
 
 			case SDL_FINGERDOWN:
 				i = event.tfinger.fingerId;
 				touchState.fingers[i].down = true;
+				break;
 
 			case SDL_FINGERMOTION:
 				i = event.tfinger.fingerId;

@@ -215,8 +215,13 @@ int main(int argc, char *argv[])
 	SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
 	SDL_SetHint(SDL_HINT_ACCELEROMETER_AS_JOYSTICK, "0");
 
+	// Allow generate synthetic mouse events on touch
+	SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "1");
+	// Disallow generate synthetic touch events on mouse
+	SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "0");
+
 #ifdef MKXPZ_BUILD_ANDROID
-	// Lock orientations to landscape
+	// Set application window orientation to landscape
 	SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
 #endif
 
