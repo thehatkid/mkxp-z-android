@@ -100,13 +100,28 @@ bool getEnvironmentBool(const char *env, bool defaultValue) {
 json::value readConfFile(const char *path) {
     
     json::value ret(0);
+#ifndef MKXPZ_BUILD_ANDROID
     if (!mkxp_fs::fileExists(path)) {
         return json::object({});
     }
+#endif
     
     try {
+#ifndef MKXPZ_BUILD_ANDROID
         std::string cfg = mkxp_fs::contentsOfFileAsString(path);
         ret = json::parse5(Encoding::convertString(cfg));
+#else
+        SDLRWStream jsonFile(path, "r");
+        if (jsonFile)
+        {
+            std::string cfg(std::istreambuf_iterator<char>(jsonFile.stream()), std::istreambuf_iterator<char>());
+            ret = json::parse5(Encoding::convertString(cfg));
+        }
+        else
+        {
+            return json::object({});
+        }
+#endif
     }
     catch (const std::exception &e) {
         Debug() << "Failed to parse" << path << ":" << e.what();

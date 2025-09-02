@@ -1,0 +1,115 @@
+name: Android CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'app/**'
+  push:
+    paths:
+      - 'app/**'
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-22.04
+    env:
+      ARCH: linux-x86_64
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.1'
+          bundler-cache: false
+
+      - name: chmod for all
+        run: chmod -R 755 .
+
+      - name: Restore cache
+        id: cache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: app/jni/build-*
+          key: jni-build-${{ hashFiles('app/jni/Makefile') }}
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: 8.2
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          cmdline-tools-version: 11076708
+      
+      - name: Install NDK
+        uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r26b
+          link-to-sdk: true
+
+      - name: Set ANDROID_NDK_HOME
+        run: |
+          echo "ANDROID_NDK_HOME=${{ steps.setup-ndk.outputs.ndk-path }}" >> "$GITHUB_ENV"
+          echo "PATH=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/$ARCH/bin:$PATH" >> "$GITHUB_ENV"
+
+      - name: Setup all prebuilt binaries
+        if: steps.cache-restore.outputs.cache-hit != 'true'
+        working-directory: ${{ github.workspace }}/app/jni
+        run: ./setup-prebuilt.sh
+
+      - name: Build libraries (ARMv8 64-bit)
+        if: steps.cache-restore.outputs.cache-hit != 'true'
+        working-directory: ${{ github.workspace }}/app/jni
+        run: make ABI=arm64-v8a && make clean
+
+      - name: Build libraries (x86_64 for emulator)
+        if: steps.cache-restore.outputs.cache-hit != 'true'
+        working-directory: ${{ github.workspace }}/app/jni
+        run: make ABI=x86_64 && make clean
+        
+      - name: Save cache
+        if: steps.cache-restore.outputs.cache-hit != 'true'
+        id: cache-save
+        uses: actions/cache/save@v4
+        with:
+          path: app/jni/build-*
+          key: jni-build-${{ hashFiles('app/jni/Makefile') }}
+
+      - name: Prepare mkxp-z files
+        working-directory: ${{ github.workspace }}/app/jni/mkxp-z
+        run: ./make_xxd.sh
+
+      - name: Build APK (Debug)
+        working-directory: ${{ github.workspace }}
+        run: ./gradlew assembleDebug
+
+      - name: Upload artifacts (Debug)
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-debug
+          path: |
+            app/build/outputs/apk/debug/*.apk
+            app/build/intermediates/merged_native_libs/debug/out/lib/*/*.so
+
+      - name: Build APK (Release)
+        working-directory: ${{ github.workspace }}
+        run: ./gradlew assemble
+
+      - name: Upload artifacts (Release)
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-release
+          path: app/build/outputs/apk/release/*.apk

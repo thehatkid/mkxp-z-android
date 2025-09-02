@@ -4,16 +4,21 @@ plugins {
 
 android {
     namespace 'com.hatkid.mkxpz'
-    compileSdk 33
+    compileSdk 34
 
+    buildFeatures {
+        buildConfig = true
+    }
+
+    ndkVersion '26.1.10909125'
+    
     defaultConfig {
         applicationId "com.hatkid.mkxpz"
-        minSdk 21
-        targetSdk 33
+        minSdk 28
+        targetSdk 34
         versionCode 11
         versionName "0.1.1"
         archivesBaseName = "mkxp-z-$versionName"
-        ndk.debugSymbolLevel = 'FULL'
     }
 
     buildTypes {
@@ -25,6 +30,7 @@ android {
         debug {
             debuggable true
             jniDebuggable true
+            ndk.debugSymbolLevel 'FULL'
         }
     }
 
@@ -33,7 +39,8 @@ android {
             enable true
             reset()
             // You can build also 'x86' and 'x86_64' if you want (useful for AVD debugging)
-            include 'armeabi-v7a', 'arm64-v8a'
+            // No 32-bit until openssl is fixed
+            include 'arm64-v8a', 'x86_64'//, 'armeabi-v7a', 'x86'
             universalApk true
         }
     }
@@ -48,8 +55,17 @@ android {
             path "jni/Android.mk"
         }
     }
+
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging true
+        }
+    }
 }
 
 dependencies {
     implementation 'com.intuit.sdp:sdp-android:1.1.0'
+    implementation 'androidx.drawerlayout:drawerlayout:1.2.0'
+    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
 }

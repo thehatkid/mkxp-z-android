@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:installLocation="auto">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:installLocation="auto">
     <!-- Access to external storage -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
@@ -45,10 +47,8 @@
         android:isGame="true"
         android:hardwareAccelerated="true"
         android:largeHeap="true"
-        android:extractNativeLibs="true"
         android:allowBackup="true"
-        android:requestLegacyExternalStorage="true"
-    >
+        android:requestLegacyExternalStorage="true">
         <!-- Main activity -->
         <activity
             android:name=".MainActivity"
@@ -61,7 +61,7 @@
             android:resizeableActivity="true"
             android:preferMinimalPostProcessing="true"
             android:exported="true"
-        >
+            tools:targetApi="r">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

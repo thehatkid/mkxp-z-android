@@ -10,8 +10,7 @@ LOCAL_CFLAGS := \
 	-DPIXMAN_NO_TLS \
 	-D_USE_MATH_DEFINES \
 	-Wno-unknown-attributes \
-	-Wno-expansion-to-defined \
-	-fno-integrated-as
+	-Wno-expansion-to-defined
 
 LOCAL_C_INCLUDES := \
 	$(LOCAL_PRECONFIG_PATH)/pixman \

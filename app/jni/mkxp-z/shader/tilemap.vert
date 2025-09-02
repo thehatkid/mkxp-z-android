@@ -26,7 +26,10 @@ void main()
 {
     vec2 tex = texCoord;
     lowp int atIndex = int(tex.y / autotileH);
-
+    if (atIndex >= nAutotiles)
+    {
+        atIndex = 0;
+    }
     lowp int pred = int(tex.x <= atAreaW && tex.y <= atAreaH);
     lowp int frame = int(aniIndex - atFrames[atIndex] * (aniIndex / atFrames[atIndex]));
     lowp int row = frame / 8;

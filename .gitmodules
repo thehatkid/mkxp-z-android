@@ -1,0 +1,40 @@
+[submodule "app/jni/libogg"]
+	path = app/jni/libogg
+	url = https://github.com/xiph/ogg
+	ignore = dirty
+[submodule "app/jni/libvorbis"]
+	path = app/jni/libvorbis
+	url = https://github.com/xiph/vorbis
+	ignore = dirty
+[submodule "app/jni/libtheora"]
+	path = app/jni/libtheora
+	url = https://github.com/xiph/theora.git
+	ignore = dirty
+[submodule "app/jni/uchardet"]
+	path = app/jni/uchardet
+	url = https://gitlab.freedesktop.org/uchardet/uchardet.git
+	ignore = dirty
+[submodule "app/jni/pixman"]
+	path = app/jni/pixman
+	url = https://gitlab.freedesktop.org/pixman/pixman.git
+	ignore = dirty
+[submodule "app/jni/physfs"]
+	path = app/jni/physfs
+	url = https://github.com/icculus/physfs
+	ignore = dirty
+[submodule "app/jni/SDL2"]
+	path = app/jni/SDL2
+	url = https://github.com/libsdl-org/SDL
+	ignore = dirty
+[submodule "app/jni/SDL2_image"]
+	path = app/jni/SDL2_image
+	url = https://github.com/libsdl-org/SDL_image
+	ignore = dirty
+[submodule "app/jni/SDL2_ttf"]
+	path = app/jni/SDL2_ttf
+	url = https://github.com/libsdl-org/SDL_ttf
+	ignore = dirty
+[submodule "app/jni/SDL2_sound"]
+	path = app/jni/SDL2_sound
+	url = https://github.com/icculus/SDL_sound
+	ignore = dirty

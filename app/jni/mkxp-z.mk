@@ -13,6 +13,7 @@ LOCAL_CPPFLAGS := \
 	-DMKXPZ_ALCDEVICE="ALCdevice" \
 	-DMKXPZ_SSL \
 	-DMKXPZ_MINIFFI \
+	-DSHARED_FLUID \
 	-Wno-undefined-var-template \
 	-Wno-uninitialized
 
@@ -45,6 +46,7 @@ LOCAL_SRC_FILES := \
 	$(LOCAL_PATH)/src/audio/audio.cpp \
 	$(LOCAL_PATH)/src/audio/audiostream.cpp \
 	$(LOCAL_PATH)/src/audio/fluid-fun.cpp \
+	$(LOCAL_PATH)/src/audio/fluidstream.c \
 	$(LOCAL_PATH)/src/audio/soundemitter.cpp \
 	$(LOCAL_PATH)/src/audio/alstream.cpp \
 	$(LOCAL_PATH)/src/audio/sdlsoundsource.cpp \
@@ -109,7 +111,7 @@ LOCAL_SRC_FILES := \
 	$(LOCAL_PATH)/binding/miniffi-binding.cpp \
 	$(LOCAL_PATH)/binding/module_rpg.cpp
 
-LOCAL_SHARED_LIBRARIES := SDL2 SDL2_ttf SDL2_image SDL2_sound openal ruby
+LOCAL_SHARED_LIBRARIES := SDL2 SDL2_ttf SDL2_image SDL2_sound openal fluidsynth ruby
 
 LOCAL_STATIC_LIBRARIES := libogg libvorbis libtheora physfs pixman uchardet libiconv openssl
 

@@ -9,6 +9,7 @@ include $(L_PATH)/libogg.mk
 include $(L_PATH)/libvorbis.mk
 include $(L_PATH)/libtheora.mk
 include $(L_PATH)/openal.mk
+include $(L_PATH)/fluidsynth.mk
 include $(L_PATH)/pixman.mk
 include $(L_PATH)/physfs.mk
 include $(L_PATH)/uchardet.mk

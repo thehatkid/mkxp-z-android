@@ -64,8 +64,11 @@
 #include <cmath>
 
 
-#define DEF_SCREEN_W (rgssVer == 1 ? 640 : 544)
-#define DEF_SCREEN_H (rgssVer == 1 ? 480 : 416)
+// #define DEF_SCREEN_W (rgssVer == 1 ? 640 : 544)
+// #define DEF_SCREEN_H (rgssVer == 1 ? 480 : 416)
+// Set custom resolution for Pokemon Uranium
+#define DEF_SCREEN_W (rgssVer == 1 ? 512 : 544)
+#define DEF_SCREEN_H (rgssVer == 1 ? 384 : 416)
 
 #define DEF_FRAMERATE (rgssVer == 1 ? 40 : 60)
 

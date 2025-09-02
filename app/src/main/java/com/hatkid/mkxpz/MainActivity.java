@@ -1,6 +1,7 @@
 package com.hatkid.mkxpz;
 
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -10,6 +11,7 @@ import android.view.View;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.ViewGroup.LayoutParams;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.LinearLayout;
 import android.graphics.Color;
@@ -25,12 +27,13 @@ import android.net.Uri;
 import android.provider.Settings;
 import android.util.Log;
 import android.util.DisplayMetrics;
+
+import androidx.drawerlayout.widget.DrawerLayout; // Keep for findViewById
+
 import java.util.Locale;
 import java.io.File;
 
 import org.libsdl.app.SDLActivity;
-import com.hatkid.mkxpz.gamepad.Gamepad;
-import com.hatkid.mkxpz.gamepad.GamepadConfig;
 
 public class MainActivity extends SDLActivity
 {
@@ -51,9 +54,8 @@ public class MainActivity extends SDLActivity
 
     protected static TextView tvFps;
 
-    // In-screen gamepad
-    private final Gamepad mGamepad = new Gamepad();
-    private boolean mGamepadInvisible = false;
+    private GamepadManager mGamepadManager;
+    private NavigationDrawerManager mNavigationDrawerManager;
 
     private void runSDLThread()
     {
@@ -109,19 +111,25 @@ public class MainActivity extends SDLActivity
                 mSingleton.finish();
             }
         }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+        // Override the setContentView from SDLActivity
+        setContentView(R.layout.activity_main);
+        // But we do want to hang mLayout on our layout
+        final FrameLayout content = findViewById(R.id.content_frame);
+        content.addView(mLayout);
 
         mMainHandler = new Handler(getMainLooper());
 
         mStorageManager = (StorageManager) getSystemService(STORAGE_SERVICE);
         mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
-        // Get main OBB filepath
+	    // Get main OBB filepath
         final String obbPrefix = "main"; // "main", "patch"
         final int obbVersion = 1;
         OBB_MAIN_FILENAME = getObbDir() + "/" + obbPrefix + "." + obbVersion + "." + getPackageName() + ".obb";
@@ -147,15 +155,7 @@ public class MainActivity extends SDLActivity
         }
 
         // Setup in-screen gamepad
-        mGamepadInvisible = (isAndroidTV() || isChromebook());
-        GamepadConfig gpadConfig = new GamepadConfig();
-        mGamepad.init(gpadConfig, mGamepadInvisible);
-        mGamepad.setOnKeyDownListener(SDLActivity::onNativeKeyDown);
-        mGamepad.setOnKeyUpListener(SDLActivity::onNativeKeyUp);
-
-        if (mLayout != null) {
-            mGamepad.attachTo(this, mLayout);
-        }
+        mGamepadManager = new GamepadManager(this, mLayout);
 
         // Setup FPS textview
         tvFps = new TextView(this);
@@ -168,6 +168,10 @@ public class MainActivity extends SDLActivity
         tvFps.setLayoutParams(params);
 
         mLayout.addView(tvFps);
+
+        // Initialize and setup NavigationDrawerManager
+        mNavigationDrawerManager = new NavigationDrawerManager(this);
+        mNavigationDrawerManager.setupNavigationDrawer();
     }
 
     @Override
@@ -208,45 +212,48 @@ public class MainActivity extends SDLActivity
     @Override
     public boolean dispatchKeyEvent(KeyEvent evt)
     {
-        if (
-            evt.getKeyCode() != KeyEvent.KEYCODE_BACK &&
-            evt.getKeyCode() != KeyEvent.KEYCODE_VOLUME_UP &&
-            evt.getKeyCode() != KeyEvent.KEYCODE_VOLUME_DOWN &&
-            evt.getKeyCode() != KeyEvent.KEYCODE_VOLUME_MUTE && 
-            evt.getKeyCode() != KeyEvent.KEYCODE_HEADSETHOOK
-        ) {
-            // Hide gamepad view on key events when visible
-            if (!mGamepadInvisible) {
-                mGamepad.hideView();
-                mGamepadInvisible = true;
-            }
-        }
-
-        if (mGamepad.processGamepadEvent(evt))
+        if (mGamepadManager.handleDispatchKeyEvent(evt)) {
             return true;
-
+        }
         return super.dispatchKeyEvent(evt);
     }
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent evt)
     {
-        // Show gamepad view on touch when hidden
-        if (mGamepadInvisible) {
-            mGamepad.showView();
-            mGamepadInvisible = false;
-        }
-
+        mGamepadManager.handleDispatchTouchEvent();
         return super.dispatchTouchEvent(evt);
     }
 
     @Override
     public boolean onGenericMotionEvent(MotionEvent evt)
     {
-        if (mGamepad.processDPadEvent(evt))
+        if (mGamepadManager.onGenericMotionEvent(evt)) {
             return true;
-
+        }
         return super.onGenericMotionEvent(evt);
+    }
+
+    // Handle game controller and keyboard key down events
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (mGamepadManager.onKeyDown(event)) {
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    // Handle game controller and keyboard key up events
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        if (mGamepadManager.onKeyUp(event)) {
+            return true;
+        }
+        return super.onKeyUp(keyCode, event);
+    }
+
+    public void finish() {
+        mSingleton.finish();
     }
 
     /**
@@ -326,6 +333,7 @@ public class MainActivity extends SDLActivity
      * 
      * @param duration milliseconds duration of vibration
      */
+    @TargetApi(Build.VERSION_CODES.Q)
     @SuppressWarnings("unused")
     private static void vibrate(int duration)
     {
@@ -333,11 +341,7 @@ public class MainActivity extends SDLActivity
             duration = 10000;
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            mVibrator.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.EFFECT_HEAVY_CLICK));
-        } else {
-            mVibrator.vibrate(duration);
-        }
+        mVibrator.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.EFFECT_HEAVY_CLICK));
     }
 
     /**
@@ -361,6 +365,6 @@ public class MainActivity extends SDLActivity
     @SuppressWarnings("unused")
     private static boolean inMultiWindow(Activity activity)
     {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && activity.isInMultiWindowMode();
+        return activity.isInMultiWindowMode();
     }
 }

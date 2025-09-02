@@ -154,7 +154,7 @@
     // tileset doesn't render at all
     // (default: disabled)
     //
-    // "subImageFix": false,
+    //"subImageFix": false,
 
 
     // Enable framebuffer blitting if the driver is
@@ -164,7 +164,7 @@
     // Does nothing on macOS.
     // (default: disabled)
     //
-    // "enableBlitting": false,
+    //"enableBlitting": false,
 
 
     // Limit the maximum size (width, height) of
